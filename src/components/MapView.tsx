@@ -20,6 +20,8 @@ import type { DistrictProps } from '../lib/region';
 import type { Disaster, RiskZone } from '../lib/database.types';
 import ZoneLayers, { type MapSelection } from './map/ZoneLayers';
 import RouteLayer, { type MapRoute } from './map/RouteLayer';
+import GroupPins from './map/GroupPins';
+import type { Ngo } from '../lib/database.types';
 
 const BOUNDARY_ATTR =
   'Boundaries: <a href="https://github.com/datameet/maps">DataMeet</a> (districts: Census 2011)';
@@ -48,6 +50,8 @@ interface Props {
   route: MapRoute | null;
   /** Long-press (right-click on a computer): sets the demo location. */
   onLongPress: (lat: number, lng: number) => void;
+  /** Help groups shown as blue heart pins (while the Help groups tab is open). */
+  groupPins: Ngo[] | null;
 }
 
 export default function MapView({
@@ -63,6 +67,7 @@ export default function MapView({
   onSelectItem,
   route,
   onLongPress,
+  groupPins,
 }: Props) {
   const tiles = BASE_MAPS[baseMap];
   const look = MAP_STYLES[baseMap];
@@ -129,6 +134,7 @@ export default function MapView({
       <StateLabels />
 
       {route && <RouteLayer route={route} />}
+      {groupPins && <GroupPins groups={groupPins} />}
 
       {userPosition && <UserMarker position={userPosition} />}
     </MapContainer>

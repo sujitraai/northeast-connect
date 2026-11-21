@@ -61,8 +61,8 @@ Public side can only READ. Only a logged-in admin can add/edit/delete.
    arrival labelled "Simulation", on-screen + browser notification.
    Admin can trigger it.
 7. Live rain radar overlay (RainViewer) with timeline play
-8. Emergency contacts with one-tap call + nearest shelters/hospitals
-9. NGOs and help groups active at a disaster site (map layer + list)
+8. [DONE] Emergency contacts with one-tap call + nearest shelters/hospitals
+9. [DONE] Help groups (NGOs) active at a disaster site (map layer + list)
 10. Offline support + language switcher (English, Assamese, Hindi, Bengali)
 ## Design direction
 Follow design-reference/DESIGN.md and index.html exactly for all UI. Use the frontend-design skill.

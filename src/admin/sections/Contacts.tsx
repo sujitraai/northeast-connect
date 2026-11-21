@@ -9,7 +9,7 @@ export default function Contacts({ startNew }: SectionProps) {
       startNew={startNew}
       table="contacts"
       title="Emergency contacts"
-      help="Numbers people can tap to call. Contacts without a district show everywhere."
+      help="Numbers people tap to call. National contacts show to everyone; others only to people in their district (or state)."
       listTitle="All contacts"
       addLabel="Add contact"
       noun="contact"
@@ -29,7 +29,7 @@ export default function Contacts({ startNew }: SectionProps) {
           ),
         },
         { header: 'Type', cell: (c) => labelOf(CONTACT_CATEGORIES, c.category) },
-        { header: 'Area', cell: (c) => place(c.district, c.state) },
+        { header: 'Shown to', cell: (c) => (c.is_national ? 'Everyone (national)' : place(c.district, c.state)) },
       ]}
     />
   );

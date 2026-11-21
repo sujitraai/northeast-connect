@@ -14,10 +14,12 @@ import DangerTakeover from './components/alerts/DangerTakeover';
 import EarlyFlash from './components/alerts/EarlyFlash';
 import FamilyPanel from './components/tabs/FamilyPanel';
 import type { MapRoute } from './components/map/RouteLayer';
-import AlertsTab from './components/tabs/AlertsTab';
+import AlertsTab, { ALERTS_KM, type AlertItem } from './components/tabs/AlertsTab';
 import DistrictPicker from './components/tabs/DistrictPicker';
-import HelpTab from './components/tabs/HelpTab';
-import NgosTab from './components/tabs/NgosTab';
+import ContactsTab from './components/tabs/ContactsTab';
+import HelpGroupsTab from './components/tabs/HelpGroupsTab';
+import { controlRoom, nearbyGroups } from './lib/nearby';
+import type { Disaster } from './lib/database.types';
 import { Icon, Spinner } from './components/icons';
 import type { BaseMapId } from './config/basemaps';
 import { NE_BOUNDS } from './config/region';
@@ -172,6 +174,33 @@ export default function App() {
   const route: MapRoute | null =
     loud && shelter ? { from: here?.kind === 'gps' ? here.at : null, to: shelter.shelter, line: routeOn } : null;
 
+  // Help near the person: help groups (30 km / nearby disaster) and the district control room.
+  const groups = useMemo(() => (here ? nearbyGroups(here, live.ngos, nowDisasters) : []), [here, live.ngos, nowDisasters]);
+  const room = controlRoom(live.contacts, here);
+  const moreHelp = {
+    group: groups[0] ?? null,
+    room,
+    onGroups: () => {
+      if (lead) setDangerClosedFor(lead.disaster.id);
+      setPanel('ngos');
+    },
+  };
+
+  // Alerts tab: active disasters near the person (nearest first), or all of them if we don't know where they are.
+  const alertItems: AlertItem[] = here
+    ? nowDisasters
+        .map((d) => ({ disaster: d, threat: assess(here, [d]).nearest }))
+        .filter((a) => a.threat !== null && a.threat.edgeKm <= ALERTS_KM)
+        .sort((a, b) => a.threat!.edgeKm - b.threat!.edgeKm)
+    : nowDisasters.map((d) => ({ disaster: d, threat: null }));
+  const openDisaster = (d: Disaster) => {
+    setFilter('all');
+    setSelection({ kind: 'disaster', id: d.id });
+    setTappedDistrict(null);
+    setPanel('map');
+    map?.flyToBounds(L.latLng(d.lat, d.lng).toBounds(Number(d.radius_km) * 2000 * 1.8), { duration: 1 });
+  };
+
   const pickDistrict = (district: string, state: string) => {
     choose({ district, state });
     setPanel('map');
@@ -280,6 +309,7 @@ export default function App() {
           onSelectItem={onSelectItem}
           route={route}
           onLongPress={onLongPress}
+          groupPins={panel === 'ngos' ? groups.map((g) => g.item) : null}
         />
       </div>
 
@@ -364,6 +394,7 @@ export default function App() {
               routeOn={routeOn}
               onRoute={() => setRouteOn((v) => !v)}
               onFamily={() => setPanel('family')}
+              help={moreHelp}
             />
           )}
           {panel === 'map' && !loud && (
@@ -385,14 +416,25 @@ export default function App() {
             <DistrictPicker districts={geo.districts} current={chosen} onPick={pickDistrict} onClose={backToMap} />
           )}
           {panel === 'family' && <FamilyPanel onClose={backToMap} />}
-          {panel === 'alerts' && <AlertsTab onClose={backToMap} />}
-          {panel === 'help' && <HelpTab onClose={backToMap} />}
-          {panel === 'ngos' && <NgosTab onClose={backToMap} />}
+          {panel === 'alerts' && <AlertsTab items={alertItems} located={here !== null} onOpen={openDisaster} onClose={backToMap} />}
+          {panel === 'help' && (
+            <ContactsTab
+              here={here}
+              contacts={live.contacts}
+              shelters={live.shelters}
+              onFind={locate}
+              onChoose={() => setPanel('district')}
+              onClose={backToMap}
+            />
+          )}
+          {panel === 'ngos' && (
+            <HelpGroupsTab here={here} groups={groups} onFind={locate} onChoose={() => setPanel('district')} onClose={backToMap} />
+          )}
         </div>
       </aside>
 
       <div className="pointer-events-none absolute inset-x-3.5 bottom-[max(14px,env(safe-area-inset-bottom))] z-[1002] lg:left-auto lg:w-[372px]">
-        <BottomNav current={tab} onChange={setPanel} />
+        <BottomNav current={tab} onChange={setPanel} alertBadge={atLeast(level, 'watch')} />
       </div>
 
       {siren.flash && level === 'early' && lead && <EarlyFlash lead={lead} onDismiss={siren.dismissFlash} />}
@@ -408,6 +450,7 @@ export default function App() {
             setPanel('family');
           }}
           onClose={() => setDangerClosedFor(lead.disaster.id)}
+          help={moreHelp}
         />
       )}
 

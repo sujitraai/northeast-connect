@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Disaster, RiskZone, Shelter } from '../lib/database.types';
+import type { Contact, Disaster, Ngo, RiskZone, Shelter } from '../lib/database.types';
 import { supabase } from '../lib/supabase';
 
 /** off = Supabase not set up; live = realtime connected; offline = showing the last load. */
@@ -10,6 +10,10 @@ export interface LiveMap {
   riskZones: RiskZone[];
   /** Safe places people are sent to in an Early warning / Danger. */
   shelters: Shelter[];
+  /** Phone numbers (national + district). */
+  contacts: Contact[];
+  /** Active help groups. */
+  ngos: Ngo[];
   status: LiveStatus;
   loaded: boolean;
   error: string | null;
@@ -18,7 +22,8 @@ export interface LiveMap {
 }
 
 /**
- * Active disasters, risk zones and shelters for the public map. Loads once, then
+ * Everything the admin edits, for the public app: active disasters, risk
+ * zones, shelters, contacts and active help groups. Loads once, then
  * reloads whenever an admin saves (Supabase realtime), when the phone comes
  * back online, and when the app comes back to the front.
  */
@@ -27,6 +32,8 @@ export function useLiveMap(): LiveMap {
     disasters: [],
     riskZones: [],
     shelters: [],
+    contacts: [],
+    ngos: [],
     status: supabase ? 'connecting' : 'off',
     loaded: false,
     error: null,
@@ -40,13 +47,15 @@ export function useLiveMap(): LiveMap {
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     const load = async () => {
-      const [d, r, sh] = await Promise.all([
+      const [d, r, sh, c, n] = await Promise.all([
         db.from('disasters').select('*').eq('active', true).order('created_at', { ascending: false }),
         db.from('risk_zones').select('*'),
         db.from('shelters').select('*'),
+        db.from('contacts').select('*'),
+        db.from('ngos').select('*').eq('active', true),
       ]);
       if (cancelled) return;
-      const failed = d.error ?? r.error ?? sh.error;
+      const failed = d.error ?? r.error ?? sh.error ?? c.error ?? n.error;
       setState((s) =>
         failed
           ? { ...s, loaded: true, error: 'Could not load disasters. Check your internet connection.' }
@@ -55,6 +64,8 @@ export function useLiveMap(): LiveMap {
               disasters: d.data ?? [],
               riskZones: r.data ?? [],
               shelters: sh.data ?? [],
+              contacts: c.data ?? [],
+              ngos: n.data ?? [],
               loaded: true,
               error: null,
               updatedAt: Date.now(),
@@ -74,6 +85,8 @@ export function useLiveMap(): LiveMap {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'disasters' }, reloadSoon)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'risk_zones' }, reloadSoon)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'shelters' }, reloadSoon)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'contacts' }, reloadSoon)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ngos' }, reloadSoon)
       .subscribe((status) => {
         if (cancelled) return;
         if (status === 'SUBSCRIBED') {

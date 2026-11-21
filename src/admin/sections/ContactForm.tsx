@@ -4,7 +4,7 @@ import { deleteRow, orNull, PHONE_RE, saveRow } from '../lib/data';
 import { CONTACT_CATEGORIES } from '../lib/labels';
 import { useSaver, type FormProps } from '../lib/useSaver';
 import { HonestyFields, PlaceFields } from '../ui/commonFields';
-import { SelectField, TextField } from '../ui/fields';
+import { SelectField, TextField, Toggle } from '../ui/fields';
 import { FormShell } from '../ui/layout';
 
 export default function ContactForm({ row, onDone, onCancel }: FormProps<Contact>) {
@@ -14,6 +14,7 @@ export default function ContactForm({ row, onDone, onCancel }: FormProps<Contact
   const [category, setCategory] = useState(row?.category ?? 'control_room');
   const [state, setState] = useState(row?.state ?? '');
   const [district, setDistrict] = useState(row?.district ?? '');
+  const [national, setNational] = useState(row?.is_national ?? false);
   // Contacts are numbers people will really call, so they default to real.
   const [isDemo, setIsDemo] = useState(row?.is_demo ?? false);
   const [source, setSource] = useState(row?.source ?? '');
@@ -34,8 +35,10 @@ export default function ContactForm({ row, onDone, onCancel }: FormProps<Contact
           name: name.trim(),
           phone: phone.trim(),
           category,
-          state: orNull(state),
-          district: orNull(district),
+          // National contacts are for everyone, so they have no area.
+          state: national ? null : orNull(state),
+          district: national ? null : orNull(district),
+          is_national: national,
           is_demo: isDemo,
           source: orNull(source),
         }),
@@ -68,7 +71,17 @@ export default function ContactForm({ row, onDone, onCancel }: FormProps<Contact
         maxLength={20}
       />
       <SelectField label="Type" value={category} onChange={setCategory} options={CONTACT_CATEGORIES} />
-      <PlaceFields state={state} district={district} onState={setState} onDistrict={setDistrict} allowAll />
+      <div className="rounded-btn bg-bg p-3.5">
+        <Toggle
+          label="National (all users)"
+          hint={national ? 'Shown to everyone, wherever they are.' : 'Shown only to people in the area below.'}
+          checked={national}
+          onChange={setNational}
+        />
+      </div>
+      {!national && (
+        <PlaceFields state={state} district={district} onState={setState} onDistrict={setDistrict} allowAll />
+      )}
       <HonestyFields isDemo={isDemo} source={source} onDemo={setIsDemo} onSource={setSource} />
     </FormShell>
   );

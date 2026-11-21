@@ -4,6 +4,8 @@ import { mapsLink, walkText, type ShelterPick } from '../../lib/shelters';
 import { formatEta, isSimulating } from '../../lib/simulation';
 import { Icon } from '../icons';
 import SirenStrip from './SirenStrip';
+import MoreHelp from './MoreHelp';
+import type { ComponentProps } from 'react';
 
 interface Props {
   lead: Nearest;
@@ -12,10 +14,11 @@ interface Props {
   siren: { sounding: boolean; toggle: () => void };
   onFamily: () => void;
   onClose: () => void;
+  help: ComponentProps<typeof MoreHelp>;
 }
 
 /** Full red Danger screen (reference screen 3). Clarity over cuteness: no mascot. */
-export default function DangerTakeover({ lead, pick, from, siren, onFamily, onClose }: Props) {
+export default function DangerTakeover({ lead, pick, from, siren, onFamily, onClose, help }: Props) {
   const g = GUIDANCE[lead.disaster.type];
   const sim = isSimulating(lead.disaster);
   const tag = sim ? 'SIMULATION · estimated arrival' : lead.etaHours !== null ? 'ESTIMATE' : lead.disaster.is_demo ? 'DEMO DATA' : null;
@@ -107,6 +110,11 @@ export default function DangerTakeover({ lead, pick, from, siren, onFamily, onCl
             ) : (
               <p className="text-[13.5px] font-semibold text-ink-2">No shelter is listed outside the area yet. Call 112.</p>
             )}
+          </section>
+
+          <section className="rounded-card bg-white p-3.5 shadow-soft">
+            <h2 className="mb-2 text-xs font-extrabold tracking-[0.08em] text-muted uppercase">More help</h2>
+            <MoreHelp {...help} />
           </section>
 
           <div className="min-h-2 flex-1" />

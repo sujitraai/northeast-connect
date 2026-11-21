@@ -4,6 +4,8 @@ import type { ShelterPick } from '../../lib/shelters';
 import { Icon } from '../icons';
 import { GroupTitle } from '../sheet';
 import { RouteButtons, ShelterCard } from './ShelterActions';
+import MoreHelp from './MoreHelp';
+import type { ComponentProps } from 'react';
 
 interface Props {
   lead: Nearest;
@@ -12,10 +14,12 @@ interface Props {
   routeOn: boolean;
   onRoute: () => void;
   onFamily: () => void;
+  /** Nearest help group + district control room. */
+  help: ComponentProps<typeof MoreHelp>;
 }
 
 /** Map sheet during an Early warning (reference screen 2b). */
-export default function EarlySheet({ lead, pick, from, routeOn, onRoute, onFamily }: Props) {
+export default function EarlySheet({ lead, pick, from, routeOn, onRoute, onFamily, help }: Props) {
   const g = GUIDANCE[lead.disaster.type];
   return (
     <>
@@ -48,6 +52,9 @@ export default function EarlySheet({ lead, pick, from, routeOn, onRoute, onFamil
           Alert family
         </button>
       </div>
+
+      <GroupTitle>More help</GroupTitle>
+      <MoreHelp {...help} />
     </>
   );
 }

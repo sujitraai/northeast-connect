@@ -58,8 +58,10 @@ export type Contact = Common & {
   name: string;
   phone: string;
   category: ContactCategory;
-  district: string | null; // null = works everywhere
+  district: string | null; // null = the whole state (or national)
   state: string | null;
+  /** Shown to everyone, wherever they are (08_live_help.sql). */
+  is_national: boolean;
 };
 
 export type Shelter = Common & {
@@ -99,7 +101,7 @@ export type AdminEntry = {
 // sim_started_at is only changed through start_simulation / stop_simulation.
 type Server = 'id' | 'created_at' | 'updated_at' | 'sim_started_at';
 // Columns with a database default can be left out when adding a row.
-type WithDefault = 'is_demo' | 'source' | 'created_by_demo' | 'sim_base_radius_km';
+type WithDefault = 'is_demo' | 'source' | 'created_by_demo' | 'sim_base_radius_km' | 'is_national';
 type Insert<T> = Omit<T, Server | WithDefault> & Partial<Pick<T, WithDefault & keyof T>>;
 
 type Table<T> = {
