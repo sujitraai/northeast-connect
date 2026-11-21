@@ -51,11 +51,11 @@ export default function NgoForm({ row, onDone, onCancel }: FormProps<Ngo>) {
           is_demo: isDemo,
           source: orNull(source),
         }),
-      () => onDone(row ? 'Group updated.' : 'Group added.'),
+      () => onDone(row ? 'Help group updated.' : 'Help group added.'),
     );
   };
 
-  const remove = () => row && void run(() => deleteRow('ngos', row.id), () => onDone('Group deleted.'));
+  const remove = () => row && void run(() => deleteRow('ngos', row.id), () => onDone('Help group deleted.'));
 
   const disasterOptions = [
     { value: '', label: 'Not linked to a disaster' },
@@ -101,14 +101,14 @@ export default function NgoForm({ row, onDone, onCancel }: FormProps<Ngo>) {
 
   return (
     <FormShell
-      title={row ? 'Edit help group' : 'New NGO or help group'}
+      title={row ? 'Edit help group' : 'New help group'}
       help="Link the group to the disaster they are helping at."
       onBack={onCancel}
       onSubmit={submit}
       onDelete={row ? remove : undefined}
       saving={saving}
       error={error}
-      saveLabel={row ? 'Save changes' : 'Save group'}
+      saveLabel={row ? 'Save changes' : 'Save help group'}
       map={map}
     >
       <TextField label="Name" placeholder="e.g. Brahmaputra Relief Volunteers" value={name} onChange={setName} maxLength={120} />

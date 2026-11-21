@@ -35,7 +35,7 @@ export function CallRow({ number, title, sub, icon, tile }: (typeof NATIONAL)[nu
 export default function HelpTab({ onClose }: { onClose: () => void }) {
   return (
     <>
-      <SheetHead title="Help near you" sub="Tap a row to call." onClose={onClose} />
+      <SheetHead title="Contacts" sub="Tap a row to call." onClose={onClose} />
       <GroupTitle>National emergency numbers</GroupTitle>
       {NATIONAL.map((n) => (
         <CallRow key={n.number} {...n} />

@@ -3,9 +3,10 @@
 -- Safe to run again: it never creates duplicates.
 --
 -- What it does
---   1. Adds created_by_demo to disasters and ngos. Only rows made by the
---      admin's demo buttons ("Flood / Landslide near demo location",
---      "Add NGO") get it. "Reset demo" deletes ONLY those rows.
+--   1. Adds created_by_demo to disasters, help groups (ngos) and shelters.
+--      Only rows made by the admin's demo buttons ("Flood / Landslide near
+--      demo location", "Add help group") get it. "Reset demo" deletes ONLY
+--      those rows.
 --   2. Adds sim_base_radius_km: the radius before the first Simulate, so
 --      Reset can put a simulated disaster back to its original size.
 --   3. reset_demo(): stops every simulation, restores original radii,
@@ -20,6 +21,8 @@ alter table public.disasters
   add column if not exists created_by_demo boolean not null default false,
   add column if not exists sim_base_radius_km numeric(6, 2);
 alter table public.ngos
+  add column if not exists created_by_demo boolean not null default false;
+alter table public.shelters
   add column if not exists created_by_demo boolean not null default false;
 
 -- Simulate now remembers the radius it started from (only the first time,
@@ -56,6 +59,7 @@ declare
   n_sims int;
   n_radius int;
   n_ngos int;
+  n_shelters int;
   n_disasters int;
 begin
   if not (select public.is_admin()) then
@@ -72,9 +76,11 @@ begin
    where sim_started_at is not null or sim_base_radius_km is not null;
   get diagnostics n_radius = row_count;
 
-  -- Delete only what the demo buttons created (NGOs first: they point at disasters).
+  -- Delete only what the demo buttons created (help groups first: they point at disasters).
   delete from public.ngos where created_by_demo;
   get diagnostics n_ngos = row_count;
+  delete from public.shelters where created_by_demo;
+  get diagnostics n_shelters = row_count;
   delete from public.disasters where created_by_demo;
   get diagnostics n_disasters = row_count;
 
@@ -82,6 +88,7 @@ begin
     'simulations_stopped', n_sims,
     'radii_restored', n_radius,
     'ngos_deleted', n_ngos,
+    'shelters_deleted', n_shelters,
     'disasters_deleted', n_disasters
   );
 end;
@@ -156,33 +163,35 @@ from (values
 ) as v(name, type, level, district, state, geometry, description)
 where not exists (select 1 from public.risk_zones z where z.name = v.name);
 
+-- Shelters and help groups: names from 07_local_names.sql; a row still
+-- carrying its old seed name also counts as present (no duplicates).
 insert into public.shelters (name, type, lat, lng, capacity, district, state, is_demo, source)
 select v.name, v.type, v.lat, v.lng, v.capacity, v.district, v.state, true, 'Demo data'
 from (values
-  ('Demo Relief Camp – Dhemaji town', 'relief_camp', 27.475::float8, 94.555::float8, 400, 'Dhemaji',             'Assam'),
-  ('Demo Relief Camp – Silapathar',   'relief_camp', 27.595, 94.725, 250, 'Dhemaji',             'Assam'),
-  ('Demo Relief Camp – Morigaon',     'relief_camp', 26.250, 92.345, 300, 'Marigaon',            'Assam'),
-  ('Demo Shelter – Haflong',          'shelter',     25.170, 93.015, 120, 'Dima Hasao',          'Assam'),
-  ('Demo Shelter – Aizawl',           'shelter',     23.735, 92.715, 150, 'Aizawl',              'Mizoram'),
-  ('Demo Hospital – Guwahati',        'hospital',    26.155, 91.765, 500, 'Kamrup Metropolitan', 'Assam'),
-  ('Demo Hospital – Shillong',        'hospital',    25.575, 91.890, 300, 'East Khasi Hills',    'Meghalaya'),
-  ('Demo Hospital – Imphal',          'hospital',    24.815, 93.930, 300, 'Imphal East',         'Manipur'),
-  ('Demo Hospital – Gangtok',         'hospital',    27.330, 88.612, 200, 'East',                'Sikkim')
-) as v(name, type, lat, lng, capacity, district, state)
-where not exists (select 1 from public.shelters s where s.name = v.name);
+  ('Namghar Relief Camp, Dhemaji',             'Demo Relief Camp – Dhemaji town', 'relief_camp', 27.475::float8, 94.555::float8, 400, 'Dhemaji',             'Assam'),
+  ('District Sports Complex Camp, Silapathar', 'Demo Relief Camp – Silapathar',   'relief_camp', 27.595, 94.725, 250, 'Dhemaji',             'Assam'),
+  ('Govt. HS School Camp, Morigaon',           'Demo Relief Camp – Morigaon',     'relief_camp', 26.250, 92.345, 300, 'Marigaon',            'Assam'),
+  ('Panchayat Bhawan Shelter, Haflong',        'Demo Shelter – Haflong',          'shelter',     25.170, 93.015, 120, 'Dima Hasao',          'Assam'),
+  ('Community Hall Shelter, Aizawl',           'Demo Shelter – Aizawl',           'shelter',     23.735, 92.715, 150, 'Aizawl',              'Mizoram'),
+  ('Riverside Health Centre, Guwahati',        'Demo Hospital – Guwahati',        'hospital',    26.155, 91.765, 500, 'Kamrup Metropolitan', 'Assam'),
+  ('Pinewood Health Centre, Shillong',         'Demo Hospital – Shillong',        'hospital',    25.575, 91.890, 300, 'East Khasi Hills',    'Meghalaya'),
+  ('Lotus Lake Health Centre, Imphal',         'Demo Hospital – Imphal',          'hospital',    24.815, 93.930, 300, 'Imphal East',         'Manipur'),
+  ('Hillside Health Centre, Gangtok',          'Demo Hospital – Gangtok',         'hospital',    27.330, 88.612, 200, 'East',                'Sikkim')
+) as v(name, old_name, type, lat, lng, capacity, district, state)
+where not exists (select 1 from public.shelters s where s.name in (v.name, v.old_name));
 
 insert into public.ngos (name, phone, focus, lat, lng, disaster_id, active, is_demo, source)
 select v.name, null, v.focus, v.lat, v.lng, d.id, true, true, 'Demo data'
 from (values
-  ('Demo Volunteer Rescue Group',   'rescue, boats',             27.470::float8, 94.600::float8, 'Brahmaputra flood – Dhemaji'),
-  ('Demo Community Kitchen',        'food, drinking water',      27.480, 94.560, 'Brahmaputra flood – Dhemaji'),
-  ('Demo Medical Aid Team',         'first aid, medicine',       26.255, 92.350, 'Flood – Morigaon'),
-  ('Demo Road Clearing Volunteers', 'clearing roads, transport', 25.165, 93.025, 'Landslide – Haflong')
-) as v(name, focus, lat, lng, disaster_title)
+  ('Brahmaputra Boat Rescue',  'Demo Volunteer Rescue Group',   'rescue boats, life jackets',     27.470::float8, 94.600::float8, 'Brahmaputra flood – Dhemaji'),
+  ('Majuli Relief Volunteers', 'Demo Community Kitchen',        'relief kits, temporary shelter', 27.480, 94.560, 'Brahmaputra flood – Dhemaji'),
+  ('Kamrup Food Bank',         'Demo Medical Aid Team',         'food packets, drinking water',   26.255, 92.350, 'Flood – Morigaon'),
+  ('Hills First Aid Team',     'Demo Road Clearing Volunteers', 'first aid, clearing roads',      25.165, 93.025, 'Landslide – Haflong')
+) as v(name, old_name, focus, lat, lng, disaster_title)
 join lateral (
   select id from public.disasters where title = v.disaster_title order by created_at limit 1
 ) d on true
-where not exists (select 1 from public.ngos n where n.name = v.name);
+where not exists (select 1 from public.ngos n where n.name in (v.name, v.old_name));
 
 commit;
 
@@ -192,6 +201,7 @@ select 'seed disasters' as what, count(*) from public.disasters
                   'Landslide risk – Aizawl', 'Earthquake – Imphal (past)')
 union all select 'seed risk zones', count(*) from public.risk_zones where is_demo and source = 'Demo data'
 union all select 'national contacts', count(*) from public.contacts where source = 'National helpline (India)'
-union all select 'seed shelters', count(*) from public.shelters where name like 'Demo %'
+union all select 'seed shelters', count(*) from public.shelters where is_demo and not created_by_demo
 union all select 'seed NGOs', count(*) from public.ngos
-  where name in ('Demo Volunteer Rescue Group', 'Demo Community Kitchen', 'Demo Medical Aid Team', 'Demo Road Clearing Volunteers');
+  where name in ('Brahmaputra Boat Rescue', 'Majuli Relief Volunteers', 'Kamrup Food Bank', 'Hills First Aid Team',
+                 'Demo Volunteer Rescue Group', 'Demo Community Kitchen', 'Demo Medical Aid Team', 'Demo Road Clearing Volunteers');

@@ -71,6 +71,8 @@ export type Shelter = Common & {
   district: string | null;
   state: string | null;
   phone: string | null;
+  /** Made by "Flood / Landslide near demo location"; deleted by "Reset demo". */
+  created_by_demo: boolean;
 };
 
 export type Ngo = Common & {
@@ -136,7 +138,13 @@ export type Database = {
       // supabase/06_demo_reset.sql
       reset_demo: {
         Args: Record<string, never>;
-        Returns: { simulations_stopped: number; radii_restored: number; ngos_deleted: number; disasters_deleted: number };
+        Returns: {
+          simulations_stopped: number;
+          radii_restored: number;
+          ngos_deleted: number;
+          shelters_deleted: number;
+          disasters_deleted: number;
+        };
       };
     };
     Enums: Record<string, never>;

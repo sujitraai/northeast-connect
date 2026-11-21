@@ -21,7 +21,7 @@ export function friendlyError(err: PostgrestError | Error | null | undefined): s
   if (code === '23502') return 'A required field is empty.';
   if (code === '22023' || code === 'P0001') return msg;
   if (/created_by_demo|sim_base_radius_km|reset_demo/.test(msg)) {
-    return 'The demo reset tools are not installed. Run supabase/06_demo_reset.sql in the Supabase SQL Editor.';
+    return 'The demo tools are not fully installed. Run supabase/06_demo_reset.sql, then 07_local_names.sql, in the Supabase SQL Editor.';
   }
   if (code === 'PGRST204' || code === '42703' || /spread_kmh|sim_started_at|start_simulation|stop_simulation/.test(msg)) {
     return 'The simulation tools are not installed. Run supabase/05_simulation.sql in the Supabase SQL Editor.';

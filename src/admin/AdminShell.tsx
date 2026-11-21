@@ -20,7 +20,7 @@ const SECTIONS: { id: SectionId; label: string; icon: IconName; count?: keyof Co
   { id: 'disasters', label: 'Disasters', icon: 'alert', count: 'disasters' },
   { id: 'contacts', label: 'Contacts', icon: 'phone', count: 'contacts' },
   { id: 'shelters', label: 'Shelters', icon: 'tent', count: 'shelters' },
-  { id: 'ngos', label: 'NGOs', icon: 'users', count: 'ngos' },
+  { id: 'ngos', label: 'Help groups', icon: 'users', count: 'ngos' },
   { id: 'admins', label: 'Admins', icon: 'shield', count: 'admins' },
 ];
 
@@ -165,7 +165,7 @@ export default function AdminShell({ email, onSignOut }: { email: string; onSign
                 key={s.id}
                 href={`#${s.id}`}
                 aria-current={on ? 'page' : undefined}
-                className={`flex h-[52px] min-w-0 flex-1 flex-col items-center justify-center gap-[3px] rounded-full text-[10px] font-bold ${
+                className={`flex h-[52px] min-w-0 flex-1 flex-col items-center justify-center gap-[3px] rounded-full text-center text-[10px] leading-[1.1] font-bold ${
                   on ? 'bg-navy text-white' : 'text-faint'
                 }`}
               >

@@ -20,9 +20,9 @@ export default function DemoPanel({ report }: { report: Report }) {
   const create = async (type: 'flood' | 'landslide') => {
     if (!demo) return;
     setBusy(type);
-    const err = await createDemoDisaster(type, demo, geo.states, geo.districts);
+    const { error, message } = await createDemoDisaster(type, demo, geo.states, geo.districts);
     setBusy(null);
-    report(err ?? `Demo ${type} added 8–10 km from the demo location. Press Simulate on it to start.`, err ? 'error' : 'ok');
+    report(error ?? message, error ? 'error' : 'ok');
   };
 
   const askReset = async () => {
@@ -98,7 +98,8 @@ function ResetDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
-  const nothing = plan.disasters.length === 0 && plan.ngos.length === 0 && plan.simulations === 0 && plan.radii.length === 0;
+  const made = plan.disasters.length + plan.ngos.length + plan.shelters.length;
+  const nothing = made === 0 && plan.simulations === 0 && plan.radii.length === 0;
   const km = (n: number) => `${Math.round(n * 10) / 10} km`;
   return (
     <div className="fixed inset-0 z-[3000] grid place-items-center bg-ink/40 p-4" role="dialog" aria-modal="true" aria-labelledby="reset-title">
@@ -111,7 +112,7 @@ function ResetDialog({
             <p>Nothing to reset: no items made by the demo buttons, and no simulation has run.</p>
           ) : (
             <>
-              {(plan.disasters.length > 0 || plan.ngos.length > 0) && (
+              {made > 0 && (
                 <div>
                   <p>Deletes these items made by the demo buttons:</p>
                   <ul className="mt-1.5 list-disc space-y-0.5 pl-5 font-bold text-ink">
@@ -119,7 +120,10 @@ function ResetDialog({
                       <li key={d.id}>{d.title}</li>
                     ))}
                     {plan.ngos.map((n) => (
-                      <li key={n.id}>{n.name} (NGO)</li>
+                      <li key={n.id}>{n.name} (help group)</li>
+                    ))}
+                    {plan.shelters.map((s) => (
+                      <li key={s.id}>{s.name} (shelter)</li>
                     ))}
                   </ul>
                 </div>

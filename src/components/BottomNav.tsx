@@ -5,8 +5,8 @@ export type TabId = 'map' | 'alerts' | 'help' | 'ngos';
 const TABS: { id: TabId; label: string; icon: IconName }[] = [
   { id: 'map', label: 'Map', icon: 'map' },
   { id: 'alerts', label: 'Alerts', icon: 'bell' },
-  { id: 'help', label: 'Help', icon: 'phone' },
-  { id: 'ngos', label: 'NGOs', icon: 'users' },
+  { id: 'help', label: 'Contacts', icon: 'phone' },
+  { id: 'ngos', label: 'Help groups', icon: 'users' },
 ];
 
 interface Props {

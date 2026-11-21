@@ -77,24 +77,24 @@ insert into public.risk_zones (name, type, level, district, state, geometry, des
 -- ─────────────────────────────────────────────────────── shelters (DEMO) ──
 -- Invented names on purpose: we don't pin real buildings without checking them.
 insert into public.shelters (name, type, lat, lng, capacity, district, state, is_demo, source) values
-  ('Demo Relief Camp – Dhemaji town',   'relief_camp', 27.475, 94.555, 400, 'Dhemaji',             'Assam',     true, 'Demo data'),
-  ('Demo Relief Camp – Silapathar',     'relief_camp', 27.595, 94.725, 250, 'Dhemaji',             'Assam',     true, 'Demo data'),
-  ('Demo Relief Camp – Morigaon',       'relief_camp', 26.250, 92.345, 300, 'Marigaon',            'Assam',     true, 'Demo data'),
-  ('Demo Shelter – Haflong',            'shelter',     25.170, 93.015, 120, 'Dima Hasao',          'Assam',     true, 'Demo data'),
-  ('Demo Shelter – Aizawl',             'shelter',     23.735, 92.715, 150, 'Aizawl',              'Mizoram',   true, 'Demo data'),
-  ('Demo Hospital – Guwahati',          'hospital',    26.155, 91.765, 500, 'Kamrup Metropolitan', 'Assam',     true, 'Demo data'),
-  ('Demo Hospital – Shillong',          'hospital',    25.575, 91.890, 300, 'East Khasi Hills',    'Meghalaya', true, 'Demo data'),
-  ('Demo Hospital – Imphal',            'hospital',    24.815, 93.930, 300, 'Imphal East',         'Manipur',   true, 'Demo data'),
-  ('Demo Hospital – Gangtok',           'hospital',    27.330, 88.612, 200, 'East',         'Sikkim',    true, 'Demo data');
+  ('Namghar Relief Camp, Dhemaji',   'relief_camp', 27.475, 94.555, 400, 'Dhemaji',             'Assam',     true, 'Demo data'),
+  ('District Sports Complex Camp, Silapathar',     'relief_camp', 27.595, 94.725, 250, 'Dhemaji',             'Assam',     true, 'Demo data'),
+  ('Govt. HS School Camp, Morigaon',       'relief_camp', 26.250, 92.345, 300, 'Marigaon',            'Assam',     true, 'Demo data'),
+  ('Panchayat Bhawan Shelter, Haflong',            'shelter',     25.170, 93.015, 120, 'Dima Hasao',          'Assam',     true, 'Demo data'),
+  ('Community Hall Shelter, Aizawl',             'shelter',     23.735, 92.715, 150, 'Aizawl',              'Mizoram',   true, 'Demo data'),
+  ('Riverside Health Centre, Guwahati',          'hospital',    26.155, 91.765, 500, 'Kamrup Metropolitan', 'Assam',     true, 'Demo data'),
+  ('Pinewood Health Centre, Shillong',          'hospital',    25.575, 91.890, 300, 'East Khasi Hills',    'Meghalaya', true, 'Demo data'),
+  ('Lotus Lake Health Centre, Imphal',            'hospital',    24.815, 93.930, 300, 'Imphal East',         'Manipur',   true, 'Demo data'),
+  ('Hillside Health Centre, Gangtok',           'hospital',    27.330, 88.612, 200, 'East',         'Sikkim',    true, 'Demo data');
 
 -- ─────────────────────────────────────────────────────────── ngos (DEMO) ──
 insert into public.ngos (name, phone, focus, lat, lng, disaster_id, active, is_demo, source)
 select v.name, null, v.focus, v.lat, v.lng, d.id, true, true, 'Demo data'
 from (values
-  ('Demo Volunteer Rescue Group', 'rescue, boats',      27.470, 94.600, 'Brahmaputra flood – Dhemaji'),
-  ('Demo Community Kitchen',      'food, drinking water', 27.480, 94.560, 'Brahmaputra flood – Dhemaji'),
-  ('Demo Medical Aid Team',       'first aid, medicine', 26.255, 92.350, 'Flood – Morigaon'),
-  ('Demo Road Clearing Volunteers', 'clearing roads, transport', 25.165, 93.025, 'Landslide – Haflong')
+  ('Brahmaputra Boat Rescue',  'rescue boats, life jackets',    27.470, 94.600, 'Brahmaputra flood – Dhemaji'),
+  ('Majuli Relief Volunteers', 'relief kits, temporary shelter', 27.480, 94.560, 'Brahmaputra flood – Dhemaji'),
+  ('Kamrup Food Bank',         'food packets, drinking water',   26.255, 92.350, 'Flood – Morigaon'),
+  ('Hills First Aid Team',     'first aid, clearing roads',      25.165, 93.025, 'Landslide – Haflong')
 ) as v(name, focus, lat, lng, disaster_title)
 join public.disasters d on d.title = v.disaster_title and d.is_demo;
 

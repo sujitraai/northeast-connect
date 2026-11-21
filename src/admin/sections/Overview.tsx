@@ -8,7 +8,7 @@ import { disasterColumns, sortDisasters } from './Disasters';
 const KPIS: { key: keyof Counts; label: string; icon: IconName; tile: string; href: string }[] = [
   { key: 'activeDisasters', label: 'Active disasters', icon: 'alert', tile: 'bg-danger-soft text-danger', href: '#disasters' },
   { key: 'shelters', label: 'Shelters', icon: 'tent', tile: 'bg-safe-soft text-safe', href: '#shelters' },
-  { key: 'activeNgos', label: 'NGOs active', icon: 'users', tile: 'bg-primary-soft text-primary', href: '#ngos' },
+  { key: 'activeNgos', label: 'Help groups active', icon: 'users', tile: 'bg-primary-soft text-primary', href: '#ngos' },
   { key: 'contacts', label: 'Contacts', icon: 'phone', tile: 'bg-watch-soft text-watch', href: '#contacts' },
 ];
 

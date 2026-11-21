@@ -11,18 +11,18 @@ export default function Ngos({ startNew }: SectionProps) {
     <CrudSection
       startNew={startNew}
       table="ngos"
-      title="NGOs and help groups"
+      title="Help groups"
       help="Groups helping at a disaster site. Link each one to the disaster they are working at."
-      listTitle="All groups"
-      addLabel="Add group"
-      noun="group"
-      empty="No groups yet. Add NGOs and volunteers who are helping on the ground."
+      listTitle="All help groups"
+      addLabel="Add help group"
+      noun="help group"
+      empty="No help groups yet. Add NGOs and volunteers who are helping on the ground."
       sort={(a, b) => Number(b.active) - Number(a.active)}
       faded={(n) => !n.active}
       Form={NgoForm}
       columns={(reload, report) => [
         {
-          header: 'Group',
+          header: 'Help group',
           cell: (n) => <TitleCell icon="users" tone="primary" title={n.name} sub={n.focus} demo={n.is_demo} />,
         },
         {
