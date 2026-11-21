@@ -4,7 +4,9 @@ import MapView from './components/MapView';
 import MapButton from './components/MapButton';
 import TopCard, { CardAction, type TopCardContent } from './components/TopCard';
 import BottomNav, { type TabId } from './components/BottomNav';
-import { GetHelpButton, Handle } from './components/sheet';
+import { Handle } from './components/sheet';
+import MapSheet, { type TypeFilter } from './components/MapSheet';
+import type { MapSelection } from './components/map/ZoneLayers';
 import AlertsTab from './components/tabs/AlertsTab';
 import HelpTab from './components/tabs/HelpTab';
 import NgosTab from './components/tabs/NgosTab';
@@ -13,6 +15,7 @@ import type { BaseMapId } from './config/basemaps';
 import { NE_BOUNDS } from './config/region';
 import { useGeoData } from './hooks/useGeoData';
 import { useGeolocation } from './hooks/useGeolocation';
+import { useLiveMap } from './hooks/useLiveMap';
 import { locatePlace, type DistrictProps, type PlaceMatch } from './lib/region';
 
 const BASEMAP_KEY = 'nec.basemap';
@@ -41,8 +44,11 @@ export default function App() {
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictProps | null>(null);
   // undefined = not located yet; null = located, but outside North East India.
   const [userPlace, setUserPlace] = useState<PlaceMatch | null | undefined>(undefined);
+  const [selection, setSelection] = useState<MapSelection>(null);
+  const [filter, setFilter] = useState<TypeFilter>('all');
 
   const geo = useGeoData();
+  const live = useLiveMap();
   const { status, position, error: locateError, locate } = useGeolocation();
 
   const toggleBaseMap = () => {
@@ -70,7 +76,23 @@ export default function App() {
     // geo.districts deliberately omitted: a late district load shouldn't re-fly the map.
   }, [position, geo.states, map]);
 
-  const onSelectDistrict = useCallback((d: DistrictProps | null) => setSelectedDistrict(d), []);
+  // Tapping a district clears a selected zone, and the other way round.
+  const onSelectDistrict = useCallback((d: DistrictProps | null) => {
+    setSelectedDistrict(d);
+    setSelection(null);
+  }, []);
+  const onSelectItem = useCallback((s: MapSelection) => {
+    setSelection(s);
+    setSelectedDistrict(null);
+    if (s) setTab('map');
+  }, []);
+
+  // Filter chips apply to both disasters and risk areas.
+  const disasters = live.disasters.filter((d) => filter === 'all' || d.type === filter);
+  const riskZones = live.riskZones.filter((z) => filter === 'all' || z.type === filter);
+  // Looked up from live data, so a deleted or hidden item closes its card.
+  const selectedDisaster = selection?.kind === 'disaster' ? (disasters.find((d) => d.id === selection.id) ?? null) : null;
+  const selectedRisk = selection?.kind === 'risk' ? (riskZones.find((z) => z.id === selection.id) ?? null) : null;
   const onMapReady = useCallback((m: LeafletMap) => setMap(m), []);
 
   const inRegion = Boolean(userPlace) && status === 'found';
@@ -104,7 +126,7 @@ export default function App() {
       ...CALM,
       greet: userPlace.district ? `${userPlace.district}, ${userPlace.state}` : userPlace.state,
       headline: `You're in ${userPlace.district ?? userPlace.state}`,
-      bubble: 'Tap any district on the map to see its name.',
+      bubble: 'Tap a coloured zone on the map to see what is happening there.',
     };
   } else if (userPlace === null) {
     card = {
@@ -132,6 +154,10 @@ export default function App() {
           selectedDistrict={selectedDistrict}
           onSelectDistrict={onSelectDistrict}
           onMapReady={onMapReady}
+          disasters={disasters}
+          riskZones={riskZones}
+          selected={selection}
+          onSelectItem={onSelectItem}
         />
       </div>
 
@@ -168,7 +194,19 @@ export default function App() {
       >
         <Handle />
         <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
-          {tab === 'map' && <MapTab onHelp={() => setTab('help')} />}
+          {tab === 'map' && (
+            <MapSheet
+              live={live}
+              shownDisasters={disasters.length}
+              shownRiskZones={riskZones.length}
+              filter={filter}
+              onFilter={setFilter}
+              selectedDisaster={selectedDisaster}
+              selectedRisk={selectedRisk}
+              onCloseSelected={() => setSelection(null)}
+              onHelp={() => setTab('help')}
+            />
+          )}
           {tab === 'alerts' && <AlertsTab onClose={backToMap} />}
           {tab === 'help' && <HelpTab onClose={backToMap} />}
           {tab === 'ngos' && <NgosTab onClose={backToMap} />}
@@ -179,18 +217,5 @@ export default function App() {
         <BottomNav current={tab} onChange={setTab} />
       </div>
     </div>
-  );
-}
-
-/** Map tab sheet: kept short so the map stays visible. */
-function MapTab({ onHelp }: { onHelp: () => void }) {
-  return (
-    <>
-      <div className="mb-5 hidden lg:block">
-        <h2 className="text-[22px] font-extrabold tracking-[-0.02em] text-ink">Northeast Connect</h2>
-        <p className="mt-0.5 text-[13.5px] font-semibold text-muted">Early warnings for the 8 North East states.</p>
-      </div>
-      <GetHelpButton onClick={onHelp} />
-    </>
   );
 }

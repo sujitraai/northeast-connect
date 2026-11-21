@@ -41,7 +41,7 @@ export default function Disasters({ startNew }: SectionProps) {
       startNew={startNew}
       table="disasters"
       title="Disasters"
-      help="Add a disaster by tapping the map. Switch off Public to hide it from people."
+      help="Public disasters show on the public map within seconds of saving. Switch off Public to hide one."
       listTitle="All disasters"
       addLabel="Add disaster"
       noun="disaster"

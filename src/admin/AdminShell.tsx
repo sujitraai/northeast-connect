@@ -117,6 +117,7 @@ export default function AdminShell({ email, onSignOut }: { email: string; onSign
             <b className="block truncate text-[13px] text-ink" title={email}>
               {email}
             </b>
+            <p className="mt-1.5">Disaster changes reach the public map within seconds.</p>
             <div className="mt-2.5 flex flex-col gap-0.5">
               <a href="/" className="flex min-h-9 items-center gap-2 font-bold text-ink-2 hover:text-ink">
                 <Icon name="external" size={15} />

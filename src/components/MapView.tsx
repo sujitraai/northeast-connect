@@ -17,6 +17,8 @@ import { MAX_BOUNDS, MAX_ZOOM, NE_BOUNDS, STATE_LABELS } from '../config/region'
 import type { GeoData } from '../hooks/useGeoData';
 import type { Position } from '../hooks/useGeolocation';
 import type { DistrictProps } from '../lib/region';
+import type { Disaster, RiskZone } from '../lib/database.types';
+import ZoneLayers, { type MapSelection } from './map/ZoneLayers';
 
 const BOUNDARY_ATTR =
   'Boundaries: <a href="https://github.com/datameet/maps">DataMeet</a> (districts: Census 2011)';
@@ -37,6 +39,10 @@ interface Props {
   selectedDistrict: DistrictProps | null;
   onSelectDistrict: (d: DistrictProps | null) => void;
   onMapReady: (map: LeafletMap) => void;
+  disasters: Disaster[];
+  riskZones: RiskZone[];
+  selected: MapSelection;
+  onSelectItem: (s: MapSelection) => void;
 }
 
 export default function MapView({
@@ -46,6 +52,10 @@ export default function MapView({
   selectedDistrict,
   onSelectDistrict,
   onMapReady,
+  disasters,
+  riskZones,
+  selected,
+  onSelectItem,
 }: Props) {
   const tiles = BASE_MAPS[baseMap];
   const look = MAP_STYLES[baseMap];
@@ -103,6 +113,8 @@ export default function MapView({
       <Pane name="states" style={{ zIndex: 370, pointerEvents: 'none' }}>
         {geo.states && <GeoJSON key={`states-${baseMap}`} data={geo.states} style={stateStyle} interactive={false} />}
       </Pane>
+
+      <ZoneLayers disasters={disasters} riskZones={riskZones} selected={selected} onSelect={onSelectItem} />
 
       <StateLabels />
 
