@@ -8,9 +8,11 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b",
-    "geo:build": "node scripts/build-geo.mjs"
+    "geo:build": "node scripts/build-geo.mjs",
+    "db:check": "node scripts/check-db.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.119.2",
     "@turf/boolean-point-in-polygon": "^7.4.0",
     "@turf/helpers": "^7.4.0",
     "leaflet": "^1.9.4",

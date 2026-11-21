@@ -46,11 +46,12 @@ Public side can only READ. Only a logged-in admin can add/edit/delete.
 ## Features (build in this order)
 1. [DONE] Full-screen map locked to North East India, state + district
    boundaries, outside dimmed, satellite/dark toggle, locate me
-2. Supabase setup: tables above, security rules (public read, admin
+2. [DONE] Supabase setup: tables above, security rules (public read, admin
    write), seed with demo data
 3. Admin panel at /admin: login; add/edit/remove disasters (click a point
    on the map + set radius), contacts, shelters, NGOs; simple forms,
    mobile-friendly
+      - "Manage admins" page: add/remove admins by email
 4. Risk zones + active disasters on the public map, updating live when
    admin saves
 5. "How safe am I?" panel: Safe / Watch / Danger, distance and direction
