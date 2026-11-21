@@ -8,8 +8,6 @@ import { useDemoPresence } from '../lib/useDemoPresence';
 import type { Report } from './CrudSection';
 import { GhostButton, Notice, PrimaryButton } from './bits';
 
-const LABEL = { ngos: 'NGO', disasters: 'disaster', shelters: 'shelter', contacts: 'contact', risk_zones: 'risk area' } as const;
-
 /** Stage tools: presets near the phone's demo location, and "Reset demo". */
 export default function DemoPanel({ report }: { report: Report }) {
   const geo = useGeo();
@@ -40,7 +38,7 @@ export default function DemoPanel({ report }: { report: Report }) {
     const err = await resetDemo();
     setBusy(null);
     setPlan(null);
-    report(err ?? 'Demo reset. Demo items added today are deleted and every simulation is stopped.', err ? 'error' : 'ok');
+    report(err ?? 'Demo reset. Demo-button items are deleted, simulations stopped and original sizes restored.', err ? 'error' : 'ok');
   };
 
   const where = place ? `${place.district ? `${place.district}, ` : ''}${place.state}` : demo ? `${demo.lat.toFixed(3)}, ${demo.lng.toFixed(3)}` : '';
@@ -100,28 +98,50 @@ function ResetDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
-  const items = Object.entries(plan.counts)
-    .filter(([, n]) => n > 0)
-    .map(([t, n]) => `${n} ${LABEL[t as keyof typeof LABEL]}${n === 1 ? '' : 's'}`);
-  const nothing = items.length === 0 && plan.simulations === 0;
+  const nothing = plan.disasters.length === 0 && plan.ngos.length === 0 && plan.simulations === 0 && plan.radii.length === 0;
+  const km = (n: number) => `${Math.round(n * 10) / 10} km`;
   return (
     <div className="fixed inset-0 z-[3000] grid place-items-center bg-ink/40 p-4" role="dialog" aria-modal="true" aria-labelledby="reset-title">
-      <div className="slide-up w-full max-w-md rounded-card bg-white p-5 shadow-soft">
+      <div className="slide-up max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-card bg-white p-5 shadow-soft">
         <h2 id="reset-title" className="text-xl font-extrabold text-ink">
           Reset the demo?
         </h2>
-        <div className="mt-3 space-y-2 text-sm font-semibold text-ink-2">
+        <div className="mt-3 space-y-3 text-sm font-semibold text-ink-2">
           {nothing ? (
-            <p>There is nothing to reset: no demo items were added today and no simulation is running.</p>
+            <p>Nothing to reset: no items made by the demo buttons, and no simulation has run.</p>
           ) : (
             <>
-              {items.length > 0 && <p>This permanently deletes {items.join(', ')} added today with “Demo data” on.</p>}
+              {(plan.disasters.length > 0 || plan.ngos.length > 0) && (
+                <div>
+                  <p>Deletes these items made by the demo buttons:</p>
+                  <ul className="mt-1.5 list-disc space-y-0.5 pl-5 font-bold text-ink">
+                    {plan.disasters.map((d) => (
+                      <li key={d.id}>{d.title}</li>
+                    ))}
+                    {plan.ngos.map((n) => (
+                      <li key={n.id}>{n.name} (NGO)</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {plan.simulations > 0 && (
                 <p>
-                  It also stops {plan.simulations} running simulation{plan.simulations === 1 ? '' : 's'}.
+                  Stops {plan.simulations} running simulation{plan.simulations === 1 ? '' : 's'}.
                 </p>
               )}
-              <Notice tone="info">Seed data from earlier days and real (non-demo) items are not touched.</Notice>
+              {plan.radii.length > 0 && (
+                <div>
+                  <p>Puts these back to their original size:</p>
+                  <ul className="mt-1.5 list-disc space-y-0.5 pl-5 font-bold text-ink">
+                    {plan.radii.map((r) => (
+                      <li key={r.title}>
+                        {r.title}: {km(r.from)} → {km(r.to)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <Notice tone="info">Seed data and everything you added by hand stay as they are.</Notice>
             </>
           )}
         </div>
@@ -135,7 +155,7 @@ function ResetDialog({
               className="inline-flex h-11 items-center gap-2 rounded-[14px] bg-danger px-[18px] text-sm font-extrabold text-white disabled:opacity-60"
             >
               <Icon name="trash" size={16} />
-              {busy ? 'Resetting…' : 'Delete and reset'}
+              {busy ? 'Resetting…' : 'Reset demo'}
             </button>
           )}
         </div>

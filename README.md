@@ -31,7 +31,8 @@ The map runs without Supabase; data features need it.
 
 1. Create a project at [supabase.com](https://supabase.com) (region: Mumbai).
 2. **SQL Editor** → run, in order: `supabase/01_schema.sql`, `supabase/02_seed.sql`,
-   `supabase/04_admin_tools.sql`, `supabase/05_simulation.sql` (spread speed + Simulate).
+   `supabase/04_admin_tools.sql`, `supabase/05_simulation.sql` (spread speed + Simulate),
+   `supabase/06_demo_reset.sql` (safe Reset demo; also restores missing seed rows).
 3. **Authentication** → turn off "Allow new users to sign up".
 4. **Authentication → Users → Add user** (tick *Auto Confirm User*), then put that email
    into `supabase/03_make_admin.sql` and run it in the SQL Editor.

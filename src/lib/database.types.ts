@@ -38,6 +38,10 @@ export type Disaster = Common & {
   spread_kmh: number;
   /** Set while "Simulate" is running (server time). */
   sim_started_at: string | null;
+  /** Radius before the first Simulate; "Reset demo" puts it back (06_demo_reset.sql). */
+  sim_base_radius_km: number | null;
+  /** Made by a demo button; only these are deleted by "Reset demo". */
+  created_by_demo: boolean;
 };
 
 export type RiskZone = Common & {
@@ -77,6 +81,8 @@ export type Ngo = Common & {
   lng: number | null;
   disaster_id: string | null;
   active: boolean;
+  /** Made by "Add NGO" on a disaster row; deleted by "Reset demo". */
+  created_by_demo: boolean;
 };
 
 /** One row of list_admins(): an admin, or a pending invite (user_id null). */
@@ -90,8 +96,9 @@ export type AdminEntry = {
 
 // sim_started_at is only changed through start_simulation / stop_simulation.
 type Server = 'id' | 'created_at' | 'updated_at' | 'sim_started_at';
-type Insert<T> = Omit<T, Server | 'is_demo' | 'source'> &
-  Partial<Pick<Common, 'is_demo' | 'source'>>;
+// Columns with a database default can be left out when adding a row.
+type WithDefault = 'is_demo' | 'source' | 'created_by_demo' | 'sim_base_radius_km';
+type Insert<T> = Omit<T, Server | WithDefault> & Partial<Pick<T, WithDefault & keyof T>>;
 
 type Table<T> = {
   Row: T;
@@ -126,6 +133,11 @@ export type Database = {
       // supabase/05_simulation.sql
       start_simulation: { Args: { p_id: string }; Returns: 'started' | 'already' };
       stop_simulation: { Args: { p_id: string }; Returns: 'stopped' | 'not_running' };
+      // supabase/06_demo_reset.sql
+      reset_demo: {
+        Args: Record<string, never>;
+        Returns: { simulations_stopped: number; radii_restored: number; ngos_deleted: number; disasters_deleted: number };
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

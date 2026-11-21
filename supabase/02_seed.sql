@@ -1,6 +1,8 @@
 -- Northeast Connect — seed data
 -- Run AFTER 01_schema.sql: SQL Editor → New query → paste → Run.
--- Safe to run again: it removes earlier seed rows first, never admin-entered rows.
+-- For a FIRST setup only. Running it again deletes every row marked Demo data
+-- (including demo rows added by hand). To put missing seed rows back without
+-- deleting anything, run 06_demo_reset.sql instead.
 --
 -- HONESTY RULES
 --   * Everything marked is_demo = true is invented for the demo. The app must

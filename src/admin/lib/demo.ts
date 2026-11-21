@@ -43,6 +43,7 @@ export async function createDemoDisaster(
     active: true,
     is_demo: true,
     source: DEMO_SOURCE,
+    created_by_demo: true,
   });
 }
 
@@ -67,64 +68,64 @@ export async function addDemoNgo(d: Disaster): Promise<{ error: string | null; n
     active: true,
     is_demo: true,
     source: DEMO_SOURCE,
+    created_by_demo: true,
   });
   return { error, name: pick.name };
 }
 
-const TABLES = ['ngos', 'disasters', 'shelters', 'contacts', 'risk_zones'] as const;
-type DemoTable = (typeof TABLES)[number];
-
 export interface ResetPlan {
-  counts: Record<DemoTable, number>;
+  /** Rows made by the demo buttons (the only rows that get deleted). */
+  disasters: { id: string; title: string }[];
+  ngos: { id: string; name: string }[];
+  /** Simulations running now. */
   simulations: number;
+  /** Disasters whose radius was grown by Simulate and will go back to the original. */
+  radii: { title: string; from: number; to: number }[];
 }
-
-/** Local midnight today, as an ISO time. */
-const startOfToday = () => {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
-};
 
 function client() {
   if (!supabase) throw new Error('Supabase is not connected.');
   return supabase;
 }
 
-/** What "Reset demo" would delete / stop (shown before asking to confirm). */
+/** What "Reset demo" would do (shown before asking to confirm). Changes nothing. */
 export async function planReset(): Promise<ResetPlan | string> {
   try {
     const db = client();
-    const since = startOfToday();
-    const counts = {} as Record<DemoTable, number>;
-    for (const t of TABLES) {
-      const { count, error } = await db.from(t).select('id', { count: 'exact', head: true }).eq('is_demo', true).gte('created_at', since);
-      if (error) return friendlyError(error);
-      counts[t] = count ?? 0;
-    }
-    const sims = await db.from('disasters').select('id', { count: 'exact', head: true }).not('sim_started_at', 'is', null);
-    return { counts, simulations: sims.error ? 0 : (sims.count ?? 0) };
+    const [d, n, grown] = await Promise.all([
+      db.from('disasters').select('id, title').eq('created_by_demo', true).order('created_at'),
+      db.from('ngos').select('id, name').eq('created_by_demo', true).order('created_at'),
+      db
+        .from('disasters')
+        .select('title, radius_km, sim_base_radius_km, sim_started_at, created_by_demo')
+        .or('sim_started_at.not.is.null,sim_base_radius_km.not.is.null'),
+    ]);
+    const failed = d.error ?? n.error ?? grown.error;
+    if (failed) return friendlyError(failed);
+    const rows = grown.data ?? [];
+    return {
+      disasters: d.data ?? [],
+      ngos: n.data ?? [],
+      simulations: rows.filter((r) => r.sim_started_at).length,
+      // Demo-button disasters are deleted anyway, so only list the ones that stay.
+      radii: rows
+        .filter((r) => !r.created_by_demo && r.sim_base_radius_km !== null)
+        .map((r) => ({ title: r.title, from: Number(r.radius_km), to: Number(r.sim_base_radius_km) })),
+    };
   } catch (e) {
     return friendlyError(e as Error);
   }
 }
 
-/** Stops every simulation, then deletes demo-data items created today. */
+/**
+ * Stops every simulation, puts simulated disasters back to their original
+ * radius, and deletes only rows made by the demo buttons. Seed data and
+ * hand-added rows are never touched. Runs as one step on the server.
+ */
 export async function resetDemo(): Promise<string | null> {
   try {
-    const db = client();
-    const running = await db.from('disasters').select('id').not('sim_started_at', 'is', null);
-    // Missing column = 05_simulation.sql not run: nothing can be simulating.
-    for (const r of running.data ?? []) {
-      const { error } = await db.rpc('stop_simulation', { p_id: r.id });
-      if (error) return friendlyError(error);
-    }
-    const since = startOfToday();
-    // NGOs first: they point at disasters.
-    for (const t of TABLES) {
-      const { error } = await db.from(t).delete().eq('is_demo', true).gte('created_at', since);
-      if (error) return friendlyError(error);
-    }
+    const { error } = await client().rpc('reset_demo');
+    if (error) return friendlyError(error);
     notifyChange();
     return null;
   } catch (e) {

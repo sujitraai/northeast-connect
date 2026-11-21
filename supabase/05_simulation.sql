@@ -1,6 +1,7 @@
 -- Northeast Connect — spread speed + "Simulate disaster" (feature 6)
 -- Run AFTER 01–04: SQL Editor → New query → paste this whole file → Run.
--- Safe to run again.
+-- Safe to run again. Then run 06_demo_reset.sql, which updates
+-- start_simulation to remember the original radius.
 --
 -- How a simulation works
 --   * start_simulation(id) saves the server time in sim_started_at.
