@@ -17,7 +17,8 @@ export interface LatLng {
 
 /** Where the person is: a GPS fix, or a district they picked from the list. */
 export type Here =
-  | { kind: 'gps'; at: LatLng; district: string | null; state: string }
+  // GPS fix, or a demo location set by long-pressing the map (it replaces GPS everywhere).
+  | { kind: 'gps'; at: LatLng; district: string | null; state: string; demo?: boolean }
   | { kind: 'district'; at: LatLng; district: string; state: string; shape: Feature<Polygon | MultiPolygon> };
 
 /**
@@ -59,6 +60,17 @@ export function distanceKm(a: LatLng, b: LatLng): number {
   const dLng = rad(b.lng - a.lng);
   const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+/** The point `km` away from `from` in direction `bearingDeg` (0 = north). */
+export function offsetPoint(from: LatLng, km: number, bearingDeg: number): LatLng {
+  const d = km / R;
+  const b = rad(bearingDeg);
+  const lat1 = rad(from.lat);
+  const lng1 = rad(from.lng);
+  const lat2 = Math.asin(Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(b));
+  const lng2 = lng1 + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(lat1), Math.cos(d) - Math.sin(lat1) * Math.sin(lat2));
+  return { lat: (lat2 * 180) / Math.PI, lng: (lng2 * 180) / Math.PI };
 }
 
 const COMPASS = ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west'];

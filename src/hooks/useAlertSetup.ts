@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { unlockAudio, unlockOnFirstTap } from '../lib/sound';
+import { unlockAudio } from '../lib/sound';
 
 const KEY = 'nec.alerts';
 
@@ -52,9 +52,6 @@ export function useAlertSetup() {
       });
     return () => status?.removeEventListener('change', update);
   }, []);
-
-  // Sound must be unlocked by a tap on every visit, not just the first one.
-  useEffect(() => (choice === 'on' ? unlockOnFirstTap() : undefined), [choice]);
 
   /** The one tap: unlock sound, ask for location (via `locate`) and notifications. */
   const turnOn = useCallback(async (locate: () => void) => {

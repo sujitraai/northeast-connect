@@ -58,7 +58,7 @@ export function SimulateButton({ d, onDone, onError }: { d: Disaster; onDone: ()
             ? 'Set a spread speed above 0 to simulate'
             : `Grow the area at ${speed} km/h, ${SIM_FACTOR}× faster (1 second = 1 minute)`
       }
-      className={`inline-flex h-10 items-center gap-1.5 rounded-xl px-3 text-xs font-extrabold transition active:scale-95 disabled:opacity-50 ${
+      className={`inline-flex h-10 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-xs font-extrabold transition active:scale-95 disabled:opacity-50 ${
         running ? 'bg-danger text-white' : 'bg-warn-soft text-warn'
       }`}
     >

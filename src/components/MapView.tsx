@@ -46,6 +46,8 @@ interface Props {
   onSelectItem: (s: MapSelection) => void;
   /** Recommended shelter (+ dotted line) during an Early warning / Danger. */
   route: MapRoute | null;
+  /** Long-press (right-click on a computer): sets the demo location. */
+  onLongPress: (lat: number, lng: number) => void;
 }
 
 export default function MapView({
@@ -60,6 +62,7 @@ export default function MapView({
   selected,
   onSelectItem,
   route,
+  onLongPress,
 }: Props) {
   const tiles = BASE_MAPS[baseMap];
   const look = MAP_STYLES[baseMap];
@@ -79,9 +82,12 @@ export default function MapView({
       zoomSnap={0.25}
       zoomControl={false}
       worldCopyJump={false}
+      // iPhone Safari has no long-press event; Leaflet's tapHold makes one.
+      tapHold
       className={`h-full w-full ${baseMap === 'satellite' ? 'on-satellite' : ''}`}
     >
       <RegionLock />
+      <LongPress onLongPress={onLongPress} />
 
       <TileLayer
         key={`${baseMap}-base`}
@@ -127,6 +133,19 @@ export default function MapView({
       {userPosition && <UserMarker position={userPosition} />}
     </MapContainer>
   );
+}
+
+/** Long-press / right-click → demo location. */
+function LongPress({ onLongPress }: { onLongPress: (lat: number, lng: number) => void }) {
+  const ref = useRef(onLongPress);
+  ref.current = onLongPress;
+  useMapEvents({
+    contextmenu(e) {
+      e.originalEvent.preventDefault();
+      ref.current(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
 }
 
 /**

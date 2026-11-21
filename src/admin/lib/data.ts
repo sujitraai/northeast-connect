@@ -66,6 +66,9 @@ export function useRows<T extends EditableTable>(table: T) {
     void reload();
   }, [reload]);
 
+  // Any admin change (here or in another section, e.g. demo buttons) refreshes the list.
+  useEffect(() => onDataChange(() => void reload()), [reload]);
+
   return { rows, loading, error, reload };
 }
 

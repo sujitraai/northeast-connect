@@ -7,6 +7,8 @@ import CrudSection, { type SectionProps } from '../ui/CrudSection';
 import type { Column } from '../ui/DataTable';
 import DisasterForm from './DisasterForm';
 import { RadiusCell, SimulateButton } from '../ui/simulate';
+import AddNgoButton from '../ui/AddNgoButton';
+import DemoPanel from '../ui/DemoPanel';
 
 const SEV_ORDER = ['low', 'moderate', 'high', 'severe'];
 
@@ -51,7 +53,13 @@ export default function Disasters({ startNew }: SectionProps) {
       sort={sortDisasters}
       faded={(d) => !d.active}
       Form={DisasterForm}
-      rowActions={(d, reload, report) => <SimulateButton d={d} onDone={reload} onError={report} />}
+      intro={(report) => <DemoPanel report={report} />}
+      rowActions={(d, reload, report) => (
+        <>
+          <SimulateButton d={d} onDone={reload} onError={report} />
+          <AddNgoButton d={d} report={report} />
+        </>
+      )}
       columns={(reload, report) => {
         const cols = disasterColumns();
         cols.splice(5, 0, {

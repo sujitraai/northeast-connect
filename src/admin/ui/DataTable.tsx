@@ -58,10 +58,7 @@ export default function DataTable<R extends { id: string }>({ rows, columns, act
       <ul className="space-y-2 lg:hidden">
         {rows.map((r) => (
           <li key={r.id} className={`rounded-[18px] bg-bg p-3 ${faded?.(r) ? 'opacity-60' : ''}`}>
-            <div className="flex items-start gap-2">
-              <div className="min-w-0 flex-1 text-[14.5px]">{first.cell(r)}</div>
-              {actions && <div className="flex shrink-0 gap-1.5">{actions(r)}</div>}
-            </div>
+            <div className="min-w-0 text-[14.5px]">{first.cell(r)}</div>
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[12.5px] font-semibold text-muted">
               {rest
                 .filter((c) => c.mobile !== 'hide')
@@ -71,6 +68,7 @@ export default function DataTable<R extends { id: string }>({ rows, columns, act
                   </span>
                 ))}
             </div>
+            {actions && <div className="mt-2.5 flex flex-wrap justify-end gap-1.5">{actions(r)}</div>}
           </li>
         ))}
       </ul>

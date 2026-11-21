@@ -1,4 +1,4 @@
-import { audioContext, unlockAudio } from './sound';
+import { audioContext, canVibrate, soundReady, unlockAudio } from './sound';
 
 /**
  * Emergency siren made with Web Audio: a tone that sweeps up and down
@@ -41,17 +41,21 @@ export function startSiren(): boolean {
     }
   }
 
-  if ('vibrate' in navigator) {
+  // Android only: iPhone has no vibration API, so there we rely on sound + full-screen visuals.
+  if (canVibrate()) {
     navigator.vibrate(VIBRATE);
     buzz = setInterval(() => navigator.vibrate(VIBRATE), 4000);
   }
-  return nodes !== null && ctx?.state === 'running';
+  return sirenAudible();
 }
+
+/** The siren is playing AND the browser lets us make sound. */
+export const sirenAudible = (): boolean => nodes !== null && soundReady();
 
 export function stopSiren(): void {
   if (buzz) clearInterval(buzz);
   buzz = null;
-  if ('vibrate' in navigator) navigator.vibrate(0);
+  if (canVibrate()) navigator.vibrate(0);
   if (!nodes) return;
   const { osc, lfo, gain } = nodes;
   nodes = null;

@@ -11,6 +11,7 @@ import TurnOnAlerts from './components/TurnOnAlerts';
 import WarningBanner from './components/alerts/WarningBanner';
 import EarlySheet from './components/alerts/EarlySheet';
 import DangerTakeover from './components/alerts/DangerTakeover';
+import EarlyFlash from './components/alerts/EarlyFlash';
 import FamilyPanel from './components/tabs/FamilyPanel';
 import type { MapRoute } from './components/map/RouteLayer';
 import AlertsTab from './components/tabs/AlertsTab';
@@ -22,6 +23,7 @@ import type { BaseMapId } from './config/basemaps';
 import { NE_BOUNDS } from './config/region';
 import { useAlertSetup } from './hooks/useAlertSetup';
 import { useChosenDistrict } from './hooks/useChosenDistrict';
+import { useDemoLocation } from './hooks/useDemoLocation';
 import { useGeoData } from './hooks/useGeoData';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useLiveMap } from './hooks/useLiveMap';
@@ -66,6 +68,8 @@ export default function App() {
   const live = useLiveMap();
   const alerts = useAlertSetup();
   const { chosen, choose } = useChosenDistrict();
+  const demo = useDemoLocation();
+  const [notice, setNotice] = useState<string | null>(null);
   const { status, position, error: locateError, denied, locate } = useGeolocation();
   const locationDenied = denied || alerts.location === 'denied';
 
@@ -85,10 +89,18 @@ export default function App() {
     if (canAutoLocate) locate();
   }, [canAutoLocate, locate]);
 
-  // Location refused and no district yet: offer the district list.
+  // Location refused and no district (or demo location) yet: offer the district list.
+  const hasDemo = demo.demo !== null;
   useEffect(() => {
-    if (locationDenied && !chosen) setPanel('district');
-  }, [locationDenied, chosen]);
+    if (locationDenied && !chosen && !hasDemo) setPanel('district');
+  }, [locationDenied, chosen, hasDemo]);
+
+  // Short message at the top (e.g. long-press outside the region).
+  useEffect(() => {
+    if (!notice) return;
+    const t = setTimeout(() => setNotice(null), 3500);
+    return () => clearTimeout(t);
+  }, [notice]);
 
   // When a GPS fix arrives (and the state shapes are loaded), work out where
   // the user is and move the map. Runs once per fix.
@@ -97,12 +109,14 @@ export default function App() {
     const place = locatePlace(position.lat, position.lng, geo.states, geo.districts);
     setUserPlace(place);
     setTappedDistrict(null);
+    if (hasDemo) return; // a demo location is in use: keep the map where it is
     if (place) {
       map.flyTo([position.lat, position.lng], Math.max(map.getZoom(), 11), { duration: 1.2 });
     } else {
       map.flyToBounds(NE_BOUNDS, { duration: 1 });
     }
     // geo.districts deliberately omitted: a late district load shouldn't re-fly the map.
+    // hasDemo read at fix time only.
   }, [position, geo.states, map]);
 
   // Where the person is: GPS wins; otherwise the district they picked.
@@ -111,8 +125,15 @@ export default function App() {
     [chosen, geo.districts],
   );
   const inRegion = Boolean(userPlace) && status === 'found' && position !== null;
+  // Where the person is: demo location (long-press) wins, then GPS, then the chosen district.
+  const demoPlace = useMemo(
+    () => (demo.demo && geo.states ? locatePlace(demo.demo.lat, demo.demo.lng, geo.states, geo.districts) : null),
+    [demo.demo, geo.states, geo.districts],
+  );
   let here: Here | null = null;
-  if (inRegion && position && userPlace) {
+  if (demo.demo && demoPlace) {
+    here = { kind: 'gps', at: demo.demo, district: demoPlace.district, state: demoPlace.state, demo: true };
+  } else if (inRegion && position && userPlace) {
     here = { kind: 'gps', at: position, district: userPlace.district, state: userPlace.state };
   } else if (chosen && chosenShape) {
     here = { kind: 'district', at: centreOf(chosenShape), district: chosen.district, state: chosen.state, shape: chosenShape };
@@ -135,7 +156,6 @@ export default function App() {
   const eta = lead?.etaHours != null ? formatEta(lead.etaHours) : null;
   const siren = useAlarm({
     level,
-    enabled: alerts.choice === 'on',
     title: level === 'danger' ? `${g?.name ?? 'Disaster'} danger: ${g?.instruction ?? 'move to safety'}` : `Early warning: ${g?.name ?? 'disaster'}`,
     body: lead
       ? lead.inside
@@ -170,6 +190,20 @@ export default function App() {
     if (s) setPanel('map');
   }, []);
   const onMapReady = useCallback((m: LeafletMap) => setMap(m), []);
+  const setDemo = demo.set;
+  const onLongPress = useCallback(
+    (lat: number, lng: number) => {
+      if (!geo.states || !locatePlace(lat, lng, geo.states, null)) {
+        setNotice('Long-press inside North East India to set a demo location.');
+        return;
+      }
+      setDemo(lat, lng);
+      setTappedDistrict(null);
+      setSelection(null);
+      setPanel('map');
+    },
+    [geo.states, setDemo],
+  );
 
   // Filter chips apply to both disasters and risk areas.
   const disasters = nowDisasters.filter((d) => filter === 'all' || d.type === filter);
@@ -217,7 +251,9 @@ export default function App() {
   // --- Alerts setup ---
   const showSetup = alerts.choice === null || setupOpen;
   const notifOff = alerts.notif === 'denied' || alerts.notif === 'default';
-  const alertsOff = alerts.choice !== null && (alerts.choice === 'skipped' || notifOff || locationDenied);
+  // Sound unlocks on any tap, so "off" means: alerts skipped, or notifications not allowed.
+  // (Refusing location alone no longer turns alerts off: a district or demo location still works.)
+  const alertsOff = alerts.choice !== null && (alerts.choice === 'skipped' || notifOff);
   const blocked = [locationDenied && 'location', alerts.notif === 'denied' && 'notifications'].filter(Boolean).join(' and ');
   const blockedNote = blocked
     ? `Your browser has blocked ${blocked} for this site. Tap the lock or ⓘ next to the web address, allow ${blocked}, then tap “Turn on alerts” again.`
@@ -234,7 +270,7 @@ export default function App() {
         <MapView
           baseMap={baseMap}
           geo={geo}
-          userPosition={inRegion ? position : null}
+          userPosition={here?.kind === 'gps' ? (here.demo ? { ...here.at, accuracy: 0 } : position) : null}
           selectedDistrict={tappedDistrict}
           onSelectDistrict={onSelectDistrict}
           onMapReady={onMapReady}
@@ -243,6 +279,7 @@ export default function App() {
           selected={selection}
           onSelectItem={onSelectItem}
           route={route}
+          onLongPress={onLongPress}
         />
       </div>
 
@@ -253,6 +290,25 @@ export default function App() {
         }`}
       >
         <div className="flex flex-col gap-2 lg:max-w-[400px]">
+          {(demo.demo || notice) && (
+            <div className="flex flex-wrap justify-center gap-2 lg:justify-start">
+              {demo.demo && (
+                <button
+                  type="button"
+                  onClick={demo.clear}
+                  className="pointer-events-auto inline-flex h-9 items-center gap-1.5 rounded-full bg-navy px-3.5 text-[13px] font-bold text-white shadow-soft"
+                >
+                  <Icon name="pin" size={15} />
+                  Demo location · <span className="text-[#AFC3FF]">tap to clear</span>
+                </button>
+              )}
+              {notice && (
+                <span role="status" className="inline-flex min-h-9 items-center rounded-full bg-white/95 px-3.5 text-[13px] font-bold text-ink-2 shadow-soft">
+                  {notice}
+                </span>
+              )}
+            </div>
+          )}
           {loud && lead && (level === 'early' || !showTakeover) ? (
             <WarningBanner
               level={level === 'danger' ? 'danger' : 'early'}
@@ -338,6 +394,8 @@ export default function App() {
       <div className="pointer-events-none absolute inset-x-3.5 bottom-[max(14px,env(safe-area-inset-bottom))] z-[1002] lg:left-auto lg:w-[372px]">
         <BottomNav current={tab} onChange={setPanel} />
       </div>
+
+      {siren.flash && level === 'early' && lead && <EarlyFlash lead={lead} onDismiss={siren.dismissFlash} />}
 
       {showTakeover && lead && (
         <DangerTakeover

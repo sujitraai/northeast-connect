@@ -179,7 +179,26 @@ body,
   }
 }
 
+/* Full-screen Early warning: the background flashes orange (no vibration on iPhone). */
+.early-flash {
+  background: #ea580c;
+  animation: early-flash 1s steps(1) infinite;
+}
+@keyframes early-flash {
+  50% {
+    background: #f97316;
+  }
+}
+
+/* Long-press on the map sets a demo location: no iPhone callout / text selection. */
+.leaflet-container {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .early-flash,
   .ring-pulse::after,
   .blink,
   .zone-pulse,

@@ -23,8 +23,13 @@ interface Props<T extends EditableTable> {
   /** Open the "add" form straight away (from an "Add" button elsewhere). */
   startNew?: boolean;
   /** Extra row buttons before Edit / Delete (e.g. Simulate). */
-  rowActions?: (row: RowOf<T>, reload: () => void, report: (msg: string) => void) => ReactNode;
+  rowActions?: (row: RowOf<T>, reload: () => void, report: Report) => ReactNode;
+  /** Shown between the page header and the list (e.g. demo tools); can post messages. */
+  intro?: (report: Report) => ReactNode;
 }
+
+/** Shows a message above the list (errors by default). */
+export type Report = (msg: string, tone?: 'ok' | 'error') => void;
 
 /** Props every list page accepts from the shell. */
 export interface SectionProps {
@@ -46,6 +51,7 @@ export default function CrudSection<T extends EditableTable>({
   Form,
   startNew,
   rowActions,
+  intro,
 }: Props<T>) {
   const { rows, loading, error, reload } = useRows(table);
   const [editing, setEditing] = useState<RowOf<T> | 'new' | null>(startNew ? 'new' : null);
@@ -83,7 +89,7 @@ export default function CrudSection<T extends EditableTable>({
 
   const list = sort ? [...rows].sort(sort) : rows;
   const doReload = () => void reload();
-  const report = (text: string) => setFlash({ tone: 'error', text });
+  const report: Report = (text, tone = 'error') => setFlash({ tone, text });
   const cols = columns(doReload, report);
 
   return (
@@ -98,6 +104,7 @@ export default function CrudSection<T extends EditableTable>({
           </PrimaryButton>
         }
       />
+      {intro?.(report)}
       {flash && (
         <div className="mb-4">
           <Notice tone={flash.tone}>{flash.text}</Notice>

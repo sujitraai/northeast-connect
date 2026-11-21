@@ -96,7 +96,7 @@ Follow design-reference/DESIGN.md and index.html exactly for all UI. Use the fro
   East Khasi Hills (Shillong) and Dibrugarh, so switching demo location
   visibly changes the lists
 
-## Demo mode (live presentation)
+## Demo mode (live presentation) [DONE]
 - Flow: admin adds disaster on laptop → phone updates live (<2 s) → admin
   presses Simulate → phone gets Early warning, then Danger → admin adds
   NGO → phone NGOs tab shows it
