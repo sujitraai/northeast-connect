@@ -8,9 +8,11 @@ import {
   TileLayer,
   useMap,
   useMapEvents,
+  ZoomControl,
 } from 'react-leaflet';
 import L, { type PathOptions } from 'leaflet';
-import { BASE_MAPS } from '../../config/basemaps';
+import { Icon } from '../../components/icons';
+import { BASE_MAPS, MAP_STYLES } from '../../config/basemaps';
 import { MAX_BOUNDS, MAX_ZOOM, NE_BOUNDS } from '../../config/region';
 import type { GeoData } from '../../hooks/useGeoData';
 import { locatePlace, type PlaceMatch } from '../../lib/region';
@@ -29,25 +31,26 @@ interface Props {
   color?: string;
 }
 
-const MASK: PathOptions = { stroke: false, fillColor: '#05070a', fillOpacity: 0.7, interactive: false };
-const STATES: PathOptions = { color: '#38bdf8', weight: 2, opacity: 0.9, fill: false, interactive: false };
+const LOOK = MAP_STYLES.streets;
+const MASK: PathOptions = { stroke: false, fillColor: LOOK.mask, fillOpacity: LOOK.maskOpacity, interactive: false };
+const STATES: PathOptions = { color: LOOK.state, weight: 2, opacity: 0.8, fill: false, interactive: false };
 const DISTRICTS: PathOptions = {
-  color: '#e2e8f0',
+  color: LOOK.district,
   weight: 1,
-  opacity: 0.35,
+  opacity: LOOK.districtOpacity,
   dashArray: '3 4',
   fill: false,
   interactive: false,
 };
 
 /** Map for choosing a location inside North East India. Tap to place the point. */
-export default function PointPicker({ geo, value, onChange, radiusKm, color = '#38bdf8' }: Props) {
+export default function PointPicker({ geo, value, onChange, radiusKm, color = '#2F5BEA' }: Props) {
   const [outside, setOutside] = useState(false);
-  const tiles = BASE_MAPS.satellite;
+  const tiles = BASE_MAPS.streets;
 
   return (
     <div>
-      <div className="relative isolate h-72 overflow-hidden rounded-xl border border-white/15 sm:h-96">
+      <div className="relative isolate h-80 overflow-hidden rounded-[18px] lg:h-[468px]">
         <MapContainer
           bounds={NE_BOUNDS}
           maxBounds={MAX_BOUNDS}
@@ -56,8 +59,10 @@ export default function PointPicker({ geo, value, onChange, radiusKm, color = '#
           minZoom={5}
           zoomSnap={0.5}
           scrollWheelZoom={false}
+          zoomControl={false}
           className="h-full w-full cursor-crosshair"
         >
+          <ZoomControl position="bottomright" />
           <TileLayer url={tiles.base.url} attribution={tiles.base.attribution} maxNativeZoom={tiles.base.maxNativeZoom} maxZoom={MAX_ZOOM} />
           <TileLayer url={tiles.labels.url} attribution={tiles.labels.attribution} maxNativeZoom={tiles.labels.maxNativeZoom} maxZoom={MAX_ZOOM} />
           <Pane name="pick-mask" style={{ zIndex: 350, pointerEvents: 'none' }}>
@@ -85,7 +90,8 @@ export default function PointPicker({ geo, value, onChange, radiusKm, color = '#
                 color,
                 weight: 2,
                 fillColor: color,
-                fillOpacity: 0.18,
+                fillOpacity: 0.16,
+                dashArray: '7 6',
                 className: 'zone-pulse',
               }}
               interactive={false}
@@ -101,17 +107,14 @@ export default function PointPicker({ geo, value, onChange, radiusKm, color = '#
           )}
         </MapContainer>
 
-        {!value && (
-          <div className="pointer-events-none absolute inset-x-0 top-3 z-[1000] flex justify-center px-3">
-            <span className="rounded-full bg-slate-950/85 px-4 py-2 text-sm font-semibold text-white shadow-lg">
-              Tap the map to set the location
-            </span>
-          </div>
-        )}
+        <div className="pointer-events-none absolute top-3 left-3 z-[1000] flex items-center gap-2 rounded-xl bg-white/95 px-3 py-2 text-[12.5px] font-bold text-ink shadow-soft">
+          <Icon name="pin" size={15} />
+          {value ? 'Tap the map to move the point' : 'Tap the map to set the location'}
+        </div>
       </div>
 
       {outside && (
-        <p role="alert" className="mt-2 text-sm font-semibold text-amber-300">
+        <p role="alert" className="mt-2 text-sm font-bold text-danger">
           That point is outside North East India. Tap inside one of the 8 states.
         </p>
       )}

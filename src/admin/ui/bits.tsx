@@ -1,78 +1,107 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { TrashIcon } from './icons';
+import { Icon, Spinner, type IconName } from '../../components/icons';
+import type { Tone } from '../lib/labels';
 
-/** Dashed = not real. Shown on every row with is_demo = true. */
+/** Grey pill on every row with is_demo = true. */
 export function DemoBadge() {
   return (
-    <span className="inline-flex items-center rounded-md border border-dashed border-slate-400/70 px-1.5 py-0.5 text-xs font-semibold text-slate-300">
+    <span className="inline-flex shrink-0 items-center rounded-full bg-chip px-2.5 py-1 text-[11.5px] font-bold text-muted">
       Demo data
     </span>
   );
 }
 
-export function Notice({
-  tone,
-  children,
-}: {
-  tone: 'error' | 'ok' | 'info';
-  children: ReactNode;
-}) {
-  const cls = {
-    error: 'border-red-500/60 bg-red-500/10 text-red-100',
-    ok: 'border-sky-400/50 bg-sky-400/10 text-sky-100',
-    info: 'border-white/15 bg-white/5 text-slate-200',
-  }[tone];
+const PILL: Record<Tone | 'safe' | 'neutral', string> = {
+  watch: 'bg-watch-soft text-watch',
+  danger: 'bg-danger-soft text-danger',
+  safe: 'bg-safe-soft text-safe',
+  neutral: 'bg-chip text-muted',
+};
+
+/** Status pill with a dot, e.g. WATCH / DANGER. */
+export function StatusPill({ tone, children }: { tone: keyof typeof PILL; children: ReactNode }) {
   return (
-    <div role={tone === 'error' ? 'alert' : 'status'} className={`rounded-xl border px-4 py-3 text-base ${cls}`}>
+    <span
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-extrabold tracking-[0.02em] ${PILL[tone]}`}
+    >
+      <i className="size-[7px] rounded-full bg-current" />
       {children}
+    </span>
+  );
+}
+
+export function Notice({ tone, children }: { tone: 'error' | 'ok' | 'info'; children: ReactNode }) {
+  const cls = {
+    error: 'bg-danger-soft text-[#991B1B]',
+    ok: 'bg-safe-soft text-[#166534]',
+    info: 'bg-primary-soft text-navy',
+  }[tone];
+  const icon: IconName = tone === 'error' ? 'alert' : tone === 'ok' ? 'check' : 'bell';
+  return (
+    <div
+      role={tone === 'error' ? 'alert' : 'status'}
+      className={`flex items-start gap-2.5 rounded-btn px-4 py-3 text-sm font-semibold ${cls}`}
+    >
+      <Icon name={icon} size={18} className="mt-px shrink-0" />
+      <div>{children}</div>
     </div>
   );
 }
 
+const BTN = 'inline-flex h-11 items-center justify-center gap-2 rounded-[14px] px-[18px] text-sm font-extrabold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60';
+
+/** Navy main button. */
 export function PrimaryButton({
   children,
   busy,
   type = 'button',
   onClick,
   disabled,
+  className = '',
 }: {
   children: ReactNode;
   busy?: boolean;
   type?: 'button' | 'submit';
   onClick?: () => void;
   disabled?: boolean;
+  className?: string;
 }) {
   return (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={busy || disabled}
-      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-sky-400 px-5 text-base font-bold text-slate-950 transition hover:bg-sky-300 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-    >
+    <button type={type} onClick={onClick} disabled={busy || disabled} className={`${BTN} bg-navy text-white hover:bg-[#1a2a57] ${className}`}>
+      {busy && <Spinner size={16} />}
       {children}
     </button>
   );
 }
 
-export function GhostButton({
-  children,
-  onClick,
-}: {
-  children: ReactNode;
-  onClick: () => void;
-}) {
+/** White button with a thin outline. */
+export function GhostButton({ children, onClick, href }: { children: ReactNode; onClick?: () => void; href?: string }) {
+  const cls = `${BTN} bg-white text-ink ring-1 ring-line ring-inset hover:bg-bg`;
+  if (href) {
+    return (
+      <a href={href} className={cls}>
+        {children}
+      </a>
+    );
+  }
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/15 px-5 text-base font-semibold text-slate-200 transition hover:bg-white/5"
-    >
+    <button type="button" onClick={onClick} className={cls}>
       {children}
     </button>
   );
 }
 
 /** Two-tap delete: first tap arms it, second tap (within 4 s) deletes. */
+function useArmed() {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    const t = setTimeout(() => setArmed(false), 4000);
+    return () => clearTimeout(t);
+  }, [armed]);
+  return [armed, setArmed] as const;
+}
+
 export function DeleteButton({
   onConfirm,
   label = 'Delete',
@@ -82,26 +111,93 @@ export function DeleteButton({
   label?: string;
   busy?: boolean;
 }) {
-  const [armed, setArmed] = useState(false);
-  useEffect(() => {
-    if (!armed) return;
-    const t = setTimeout(() => setArmed(false), 4000);
-    return () => clearTimeout(t);
-  }, [armed]);
-
+  const [armed, setArmed] = useArmed();
   return (
     <button
       type="button"
       disabled={busy}
       onClick={() => (armed ? (setArmed(false), onConfirm()) : setArmed(true))}
-      className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border px-4 text-base font-semibold transition disabled:opacity-60 ${
-        armed
-          ? 'border-red-500 bg-red-600 text-white'
-          : 'border-red-500/40 text-red-300 hover:bg-red-500/10'
+      className={`${BTN} ${armed ? 'bg-danger text-white' : 'bg-danger-soft text-danger hover:bg-[#fbdada]'}`}
+    >
+      <Icon name="trash" size={16} />
+      {armed ? 'Tap again to delete' : label}
+    </button>
+  );
+}
+
+/** Small square icon button for table rows (edit / delete). */
+export function IconButton({
+  icon,
+  label,
+  onClick,
+  danger,
+}: {
+  icon: IconName;
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className={`grid size-10 place-items-center rounded-xl transition active:scale-95 ${
+        danger ? 'bg-danger text-white' : 'bg-bg text-muted hover:text-ink'
       }`}
     >
-      <TrashIcon />
-      {armed ? 'Tap again to confirm' : label}
+      <Icon name={icon} size={16} />
+    </button>
+  );
+}
+
+/** Trash icon that asks for a second tap before deleting. */
+export function DeleteIconButton({ onConfirm, what }: { onConfirm: () => void; what: string }) {
+  const [armed, setArmed] = useArmed();
+  return armed ? (
+    <button
+      type="button"
+      onClick={() => (setArmed(false), onConfirm())}
+      className="h-10 rounded-xl bg-danger px-3 text-xs font-extrabold text-white"
+    >
+      Delete?
+    </button>
+  ) : (
+    <IconButton icon="trash" label={`Delete ${what}`} onClick={() => setArmed(true)} />
+  );
+}
+
+/** On/off switch (green when on), as in the reference. */
+export function Switch({
+  checked,
+  onChange,
+  label,
+  id,
+  disabled,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label?: string;
+  id?: string;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      id={id}
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={`relative h-6 w-10 shrink-0 rounded-full transition-colors disabled:opacity-50 ${checked ? 'bg-safe' : 'bg-[#CBD5E1]'}`}
+    >
+      <span
+        className={`absolute top-[3px] left-[3px] size-[18px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,.2)] transition-transform ${
+          checked ? 'translate-x-4' : ''
+        }`}
+      />
     </button>
   );
 }

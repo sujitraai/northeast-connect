@@ -1,13 +1,13 @@
 import { useState } from 'react';
+import { DISASTER_ICON, Icon } from '../../components/icons';
 import type { Disaster } from '../../lib/database.types';
 import { useGeo } from '../geo';
 import { deleteRow, inNeBox, orNull, saveRow } from '../lib/data';
 import { DISASTER_TYPES, SEVERITIES, severityOf } from '../lib/labels';
 import { useSaver, type FormProps } from '../lib/useSaver';
 import { HonestyFields, PlaceFields } from '../ui/commonFields';
-import { Segmented, TextArea, TextField, Toggle } from '../ui/fields';
-import { DISASTER_ICONS } from '../ui/icons';
-import { FormShell } from '../ui/layout';
+import { RangeField, Segmented, TextArea, TextField, Toggle } from '../ui/fields';
+import { FormShell, Panel } from '../ui/layout';
 import PointPicker, { type PickedPoint } from '../ui/PointPicker';
 
 const MAX_RADIUS = 300;
@@ -23,6 +23,7 @@ export default function DisasterForm({ row, onDone, onCancel }: FormProps<Disast
   const [radius, setRadius] = useState(String(row?.radius_km ?? 10));
   const [state, setState] = useState(row?.state ?? '');
   const [district, setDistrict] = useState(row?.district ?? '');
+  const [autoPlace, setAutoPlace] = useState(false);
   const [description, setDescription] = useState(row?.description ?? '');
   const [active, setActive] = useState(row?.active ?? true);
   const [isDemo, setIsDemo] = useState(row?.is_demo ?? true);
@@ -55,118 +56,101 @@ export default function DisasterForm({ row, onDone, onCancel }: FormProps<Disast
           is_demo: isDemo,
           source: orNull(source),
         }),
-      () => onDone(row ? 'Disaster updated.' : 'Disaster added. It is now on the public map.'),
+      () => onDone(row ? 'Disaster updated.' : 'Disaster added.'),
     );
   };
 
-  const remove = () =>
-    row && void run(() => deleteRow('disasters', row.id), () => onDone('Disaster deleted.'));
+  const remove = () => row && void run(() => deleteRow('disasters', row.id), () => onDone('Disaster deleted.'));
+
+  const map = (
+    <Panel
+      title="Place on map"
+      side={
+        district && (
+          <span className="rounded-full bg-chip px-2.5 py-1 text-[11.5px] font-bold text-muted">{district}</span>
+        )
+      }
+    >
+      <PointPicker
+        geo={geo}
+        value={point}
+        radiusKm={radiusNum}
+        color={color}
+        onChange={(p, place) => {
+          setPoint(p);
+          setState(place.state);
+          setDistrict(place.district ?? '');
+          setAutoPlace(true);
+        }}
+      />
+      {point && (
+        <p className="mt-2 text-xs font-semibold text-muted">
+          Centre {point.lat.toFixed(4)}, {point.lng.toFixed(4)}
+        </p>
+      )}
+    </Panel>
+  );
 
   return (
     <FormShell
-      title={row ? 'Edit disaster' : 'Add a disaster'}
+      title={row ? 'Edit disaster' : 'New disaster'}
+      help="Tap the map to place the centre. The ring shows the affected area."
       onBack={onCancel}
       onSubmit={submit}
       onDelete={row ? remove : undefined}
       saving={saving}
       error={error}
-      saveLabel={row ? 'Save changes' : 'Add disaster'}
+      saveLabel={row ? 'Save changes' : 'Save disaster'}
+      map={map}
     >
-      <TextField label="Title" placeholder="e.g. Flood – Dhemaji" value={title} onChange={setTitle} maxLength={120} required />
+      <TextField label="Title" placeholder="e.g. Flood – North Guwahati" value={title} onChange={setTitle} maxLength={120} required />
 
       <Segmented
         label="Type"
         value={type}
         onChange={setType}
-        options={DISASTER_TYPES.map((t) => {
-          const Icon = DISASTER_ICONS[t.value];
-          return { ...t, icon: <Icon /> };
-        })}
+        options={DISASTER_TYPES.map((t) => ({ ...t, icon: <Icon name={DISASTER_ICON[t.value]} size={14} /> }))}
       />
 
       <Segmented
-        label="How serious?"
+        label="Severity"
         value={severity}
         onChange={setSeverity}
+        hint="Low and Moderate show as Watch (amber). High and Severe show as Danger (red)."
         options={SEVERITIES.map((s) => ({
           value: s.value,
           label: s.label,
-          activeClass: `${s.chip} ${s.value === 'severe' ? '' : 'bg-white/5'}`,
+          tone: s.tone,
+          icon: <i className="size-2 rounded-full" style={{ background: s.color }} />,
         }))}
       />
 
-      <div>
-        <p className="mb-1.5 text-sm font-semibold text-slate-200">Where is it?</p>
-        <PointPicker
-          geo={geo}
-          value={point}
-          radiusKm={radiusNum}
-          color={color}
-          onChange={(p, place) => {
-            setPoint(p);
-            setState(place.state);
-            setDistrict(place.district ?? '');
-          }}
-        />
-        {point && (
-          <p className="mt-2 text-sm text-slate-400">
-            Centre {point.lat.toFixed(4)}, {point.lng.toFixed(4)}. Tap again to move it.
-          </p>
-        )}
-      </div>
+      <RangeField label="Affected radius" value={radius} onChange={setRadius} min={1} max={100} unit="km" />
 
-      <div>
-        <label htmlFor="radius" className="mb-1.5 block text-sm font-semibold text-slate-200">
-          Affected area
-          <span className="ml-2 font-normal text-slate-500">distance from the centre</span>
-        </label>
-        <div className="flex items-center gap-4">
-          <input
-            id="radius"
-            type="range"
-            min={1}
-            max={100}
-            step={1}
-            value={Math.min(radiusNum || 1, 100)}
-            onChange={(e) => setRadius(e.target.value)}
-            className="h-12 flex-1"
-            style={{ accentColor: color }}
-            aria-label="Affected area in kilometres"
-          />
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              inputMode="decimal"
-              min={1}
-              max={MAX_RADIUS}
-              value={radius}
-              onChange={(e) => setRadius(e.target.value)}
-              className="w-24 rounded-xl border border-white/15 bg-slate-950/60 px-3 py-3 text-right text-base font-bold text-white focus:border-sky-400 focus:outline-none"
-              aria-label="Affected area, kilometres"
-            />
-            <span className="text-base text-slate-300">km</span>
-          </div>
-        </div>
-      </div>
-
-      <PlaceFields state={state} district={district} onState={setState} onDistrict={setDistrict} />
+      <PlaceFields
+        state={state}
+        district={district}
+        auto={autoPlace}
+        onState={(v) => (setState(v), setAutoPlace(false))}
+        onDistrict={(v) => (setDistrict(v), setAutoPlace(false))}
+      />
 
       <TextArea
-        label="What is happening?"
-        hint="Short, plain words"
+        label="What should people know?"
+        placeholder="e.g. River level rising near North Guwahati. Avoid low-lying roads."
         value={description}
         onChange={setDescription}
         maxLength={2000}
       />
 
-      <Toggle
-        label="Show on the public map"
-        hint={active ? 'People can see this now.' : 'Hidden. Turn on when the alert should go out.'}
-        checked={active}
-        onChange={setActive}
-      />
-
-      <HonestyFields isDemo={isDemo} source={source} onDemo={setIsDemo} onSource={setSource} />
+      <HonestyFields isDemo={isDemo} source={source} onDemo={setIsDemo} onSource={setSource}>
+        <Toggle
+          label="Show on public map"
+          hint={active ? 'People can see this.' : 'Hidden from people.'}
+          checked={active}
+          onChange={setActive}
+        />
+      </HonestyFields>
     </FormShell>
   );
 }

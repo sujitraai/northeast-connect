@@ -6,7 +6,7 @@ import { SHELTER_TYPES } from '../lib/labels';
 import { useSaver, type FormProps } from '../lib/useSaver';
 import { HonestyFields, PlaceFields } from '../ui/commonFields';
 import { Segmented, TextField } from '../ui/fields';
-import { FormShell } from '../ui/layout';
+import { FormShell, Panel } from '../ui/layout';
 import PointPicker, { type PickedPoint } from '../ui/PointPicker';
 
 export default function ShelterForm({ row, onDone, onCancel }: FormProps<Shelter>) {
@@ -19,6 +19,7 @@ export default function ShelterForm({ row, onDone, onCancel }: FormProps<Shelter
   const [phone, setPhone] = useState(row?.phone ?? '');
   const [state, setState] = useState(row?.state ?? '');
   const [district, setDistrict] = useState(row?.district ?? '');
+  const [autoPlace, setAutoPlace] = useState(false);
   const [isDemo, setIsDemo] = useState(row?.is_demo ?? true);
   const [source, setSource] = useState(row?.source ?? '');
 
@@ -57,33 +58,45 @@ export default function ShelterForm({ row, onDone, onCancel }: FormProps<Shelter
 
   const remove = () => row && void run(() => deleteRow('shelters', row.id), () => onDone('Shelter deleted.'));
 
+  const map = (
+    <Panel title="Place on map">
+      <PointPicker
+        geo={geo}
+        value={point}
+        color="#16A34A"
+        onChange={(p, place) => {
+          setPoint(p);
+          setState(place.state);
+          setDistrict(place.district ?? '');
+          setAutoPlace(true);
+        }}
+      />
+    </Panel>
+  );
+
   return (
     <FormShell
-      title={row ? 'Edit shelter' : 'Add a shelter or hospital'}
+      title={row ? 'Edit shelter' : 'New shelter or hospital'}
+      help="Tap the map to place it. People in danger are sent to the nearest one."
       onBack={onCancel}
       onSubmit={submit}
       onDelete={row ? remove : undefined}
       saving={saving}
       error={error}
-      saveLabel={row ? 'Save changes' : 'Add shelter'}
+      saveLabel={row ? 'Save changes' : 'Save shelter'}
+      map={map}
     >
-      <TextField label="Name" value={name} onChange={setName} maxLength={120} />
+      <TextField label="Name" placeholder="e.g. Relief camp, Govt. school" value={name} onChange={setName} maxLength={120} />
       <Segmented label="Type" value={type} onChange={setType} options={SHELTER_TYPES} />
-      <div>
-        <p className="mb-1.5 text-sm font-semibold text-slate-200">Where is it?</p>
-        <PointPicker
-          geo={geo}
-          value={point}
-          onChange={(p, place) => {
-            setPoint(p);
-            setState(place.state);
-            setDistrict(place.district ?? '');
-          }}
-        />
-      </div>
-      <PlaceFields state={state} district={district} onState={setState} onDistrict={setDistrict} />
-      <div className="grid gap-5 sm:grid-cols-2">
-        <TextField label="Capacity" hint="People" type="number" inputMode="numeric" value={capacity} onChange={setCapacity} />
+      <PlaceFields
+        state={state}
+        district={district}
+        auto={autoPlace}
+        onState={(v) => (setState(v), setAutoPlace(false))}
+        onDistrict={(v) => (setDistrict(v), setAutoPlace(false))}
+      />
+      <div className="grid gap-3.5 sm:grid-cols-2">
+        <TextField label="Space for" hint="People" type="number" inputMode="numeric" value={capacity} onChange={setCapacity} />
         <TextField label="Phone number" hint="Optional" type="tel" inputMode="tel" value={phone} onChange={setPhone} maxLength={20} />
       </div>
       <HonestyFields isDemo={isDemo} source={source} onDemo={setIsDemo} onSource={setSource} />

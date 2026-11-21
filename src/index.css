@@ -1,39 +1,78 @@
 @import 'tailwindcss';
 
+/* Tokens from design-reference/DESIGN.md. Status colours carry meaning only. */
+@theme {
+  --font-sans: 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --color-bg: #f4f6fb;
+  --color-card: #ffffff;
+  --color-ink: #0f172a;
+  --color-ink-2: #334155;
+  --color-muted: #64748b;
+  --color-faint: #94a3b8;
+  --color-line: #e5e9f2;
+  --color-chip: #f1f4fa;
+  --color-handle: #d8dee9;
+
+  --color-primary: #2f5bea;
+  --color-primary-soft: #e8eeff;
+  --color-navy: #0f1b3d;
+
+  --color-safe: #16a34a;
+  --color-safe-soft: #e6f6ec;
+  --color-watch: #d97706;
+  --color-watch-soft: #fff3dc;
+  --color-warn: #ea580c;
+  --color-warn-soft: #ffedd5;
+  --color-danger: #dc2626;
+  --color-danger-soft: #fdecec;
+
+  --radius-sheet: 28px;
+  --radius-card: 22px;
+  --radius-inner: 20px;
+  --radius-btn: 16px;
+
+  --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.1), 0 2px 6px rgba(15, 23, 42, 0.06);
+  --shadow-sheet: 0 -12px 34px rgba(15, 23, 42, 0.1);
+  --shadow-nav: 0 12px 30px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+
 html,
 body,
 #root {
   height: 100%;
   margin: 0;
-  background: #0b0f14;
-  color: #e2e8f0;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
 }
 
-/* Dark backdrop while tiles load. */
+:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Light backdrop while tiles load. */
 .leaflet-container {
-  background: #0b0f14;
+  background: #eef1f5;
   font-family: inherit;
 }
 
 .leaflet-control-attribution {
-  background: rgba(11, 15, 20, 0.7) !important;
-  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.8) !important;
+  color: var(--color-muted);
   font-size: 10px;
   max-width: 70vw;
+  border-radius: 8px 0 0 0;
 }
 .leaflet-control-attribution a {
-  color: #cbd5e1;
+  color: var(--color-ink-2);
 }
 
-/* State name labels (divIcon). */
+/* State name labels (divIcon). Colour follows the base map. */
 .state-label {
   pointer-events: none;
 }
@@ -41,34 +80,78 @@ body,
   display: block;
   transform: translate(-50%, -50%);
   white-space: nowrap;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #e0f2fe;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--color-ink-2);
+  text-shadow:
+    0 0 2px #fff,
+    0 0 4px #fff,
+    0 0 8px #fff;
+}
+.on-satellite .state-label span {
+  color: #fff;
   text-shadow:
     0 0 3px #000,
     0 0 6px #000,
     0 1px 2px #000;
 }
 
-/* Admin map picker: the affected area breathes so it reads as "live". */
+/* A danger zone breathes so it reads as "live". */
 .zone-pulse {
-  animation: zone-pulse 2.4s ease-in-out infinite;
+  animation: zone-pulse 2.2s ease-in-out infinite;
 }
 @keyframes zone-pulse {
   0%,
   100% {
-    fill-opacity: 0.12;
-    stroke-opacity: 1;
+    fill-opacity: 0.16;
   }
   50% {
-    fill-opacity: 0.3;
-    stroke-opacity: 0.6;
+    fill-opacity: 0.32;
   }
 }
+
+/* Sheets and panels slide up when opened. */
+.slide-up {
+  animation: slide-up 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes slide-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+
+/* Native range input styled like the reference slider. */
+.range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 8px;
+  background: linear-gradient(var(--color-primary), var(--color-primary)) 0 / var(--fill, 0%) 100% no-repeat,
+    var(--color-line);
+  cursor: pointer;
+}
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  border: 5px solid var(--color-primary);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+}
+.range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 5px solid var(--color-primary);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .zone-pulse {
+  .zone-pulse,
+  .slide-up {
     animation: none;
   }
 }

@@ -12,7 +12,7 @@ import {
 } from 'react-leaflet';
 import L, { type Layer, type Map as LeafletMap, type PathOptions } from 'leaflet';
 import type { Feature } from 'geojson';
-import { BASE_MAPS, type BaseMapId } from '../config/basemaps';
+import { BASE_MAPS, MAP_STYLES, type BaseMapId } from '../config/basemaps';
 import { MAX_BOUNDS, MAX_ZOOM, NE_BOUNDS, STATE_LABELS } from '../config/region';
 import type { GeoData } from '../hooks/useGeoData';
 import type { Position } from '../hooks/useGeolocation';
@@ -21,37 +21,13 @@ import type { DistrictProps } from '../lib/region';
 const BOUNDARY_ATTR =
   'Boundaries: <a href="https://github.com/datameet/maps">DataMeet</a> (districts: Census 2011)';
 
-const MASK_STYLE: PathOptions = {
-  stroke: false,
-  fillColor: '#05070a',
-  fillOpacity: 0.72,
-  interactive: false,
-};
-
-const STATE_STYLE: PathOptions = {
-  color: '#38bdf8',
-  weight: 2.5,
-  opacity: 0.95,
-  fill: false,
-  interactive: false,
-};
-
-const DISTRICT_STYLE: PathOptions = {
-  color: '#e2e8f0',
-  weight: 1,
-  opacity: 0.45,
-  dashArray: '3 4',
-  fillColor: '#38bdf8',
-  fillOpacity: 0,
-};
-
 const DISTRICT_SELECTED: PathOptions = {
-  color: '#fbbf24',
-  weight: 2.5,
+  color: '#2F5BEA',
+  weight: 3,
   opacity: 1,
   dashArray: undefined,
-  fillColor: '#fbbf24',
-  fillOpacity: 0.12,
+  fillColor: '#2F5BEA',
+  fillOpacity: 0.1,
 };
 
 interface Props {
@@ -72,6 +48,10 @@ export default function MapView({
   onMapReady,
 }: Props) {
   const tiles = BASE_MAPS[baseMap];
+  const look = MAP_STYLES[baseMap];
+
+  const maskStyle: PathOptions = { stroke: false, fillColor: look.mask, fillOpacity: look.maskOpacity, interactive: false };
+  const stateStyle: PathOptions = { color: look.state, weight: 2.5, opacity: 0.9, fill: false, interactive: false };
 
   return (
     <MapContainer
@@ -85,7 +65,7 @@ export default function MapView({
       zoomSnap={0.25}
       zoomControl={false}
       worldCopyJump={false}
-      className="h-full w-full"
+      className={`h-full w-full ${baseMap === 'satellite' ? 'on-satellite' : ''}`}
     >
       <RegionLock />
 
@@ -104,15 +84,16 @@ export default function MapView({
         maxZoom={MAX_ZOOM}
       />
 
-      {/* Dim everything outside the 8 NE states. */}
+      {/* Fade everything outside the 8 NE states. */}
       <Pane name="mask" style={{ zIndex: 350 }}>
-        {geo.mask && <GeoJSON data={geo.mask} style={MASK_STYLE} interactive={false} />}
+        {geo.mask && <GeoJSON key={`mask-${baseMap}`} data={geo.mask} style={maskStyle} interactive={false} />}
       </Pane>
 
       <Pane name="districts" style={{ zIndex: 360 }}>
         {geo.districts && (
           <Districts
             data={geo.districts}
+            baseMap={baseMap}
             selected={selectedDistrict}
             onSelect={onSelectDistrict}
           />
@@ -120,7 +101,7 @@ export default function MapView({
       </Pane>
 
       <Pane name="states" style={{ zIndex: 370, pointerEvents: 'none' }}>
-        {geo.states && <GeoJSON data={geo.states} style={STATE_STYLE} interactive={false} />}
+        {geo.states && <GeoJSON key={`states-${baseMap}`} data={geo.states} style={stateStyle} interactive={false} />}
       </Pane>
 
       <StateLabels />
@@ -153,10 +134,12 @@ function RegionLock() {
 
 function Districts({
   data,
+  baseMap,
   selected,
   onSelect,
 }: {
   data: NonNullable<GeoData['districts']>;
+  baseMap: BaseMapId;
   selected: DistrictProps | null;
   onSelect: (d: DistrictProps | null) => void;
 }) {
@@ -164,11 +147,20 @@ function Districts({
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
 
+  const look = MAP_STYLES[baseMap];
+  const normal: PathOptions = {
+    color: look.district,
+    weight: 1,
+    opacity: look.districtOpacity,
+    dashArray: '3 4',
+    fillColor: '#2F5BEA',
+    fillOpacity: 0,
+  };
+
   const isSelected = (p: DistrictProps) =>
     selected !== null && p.district === selected.district && p.state === selected.state;
 
-  const style = (f?: Feature) =>
-    f && isSelected(f.properties as DistrictProps) ? DISTRICT_SELECTED : DISTRICT_STYLE;
+  const style = (f?: Feature) => (f && isSelected(f.properties as DistrictProps) ? DISTRICT_SELECTED : normal);
 
   const onEachFeature = (feature: Feature, layer: Layer) => {
     layer.on('click', (e) => {
@@ -182,8 +174,8 @@ function Districts({
 
   return (
     <GeoJSON
-      // Re-style when the selection changes.
-      key={selected ? `${selected.state}/${selected.district}` : 'none'}
+      // Re-style when the selection or base map changes.
+      key={`${baseMap}:${selected ? `${selected.state}/${selected.district}` : 'none'}`}
       data={data}
       style={style}
       onEachFeature={onEachFeature}
@@ -219,6 +211,7 @@ function StateLabels() {
   );
 }
 
+/** Blue dot with a soft halo, as in the reference. */
 function UserMarker({ position }: { position: Position }) {
   const center: [number, number] = [position.lat, position.lng];
   return (
@@ -226,13 +219,19 @@ function UserMarker({ position }: { position: Position }) {
       <Circle
         center={center}
         radius={position.accuracy}
-        pathOptions={{ color: '#3b82f6', weight: 1, fillColor: '#3b82f6', fillOpacity: 0.12 }}
+        pathOptions={{ color: '#2F5BEA', weight: 1, opacity: 0.4, fillColor: '#2F5BEA', fillOpacity: 0.12 }}
         interactive={false}
       />
       <CircleMarker
         center={center}
-        radius={9}
-        pathOptions={{ color: '#ffffff', weight: 3, fillColor: '#3b82f6', fillOpacity: 1 }}
+        radius={18}
+        pathOptions={{ stroke: false, fillColor: '#2F5BEA', fillOpacity: 0.15 }}
+        interactive={false}
+      />
+      <CircleMarker
+        center={center}
+        radius={8}
+        pathOptions={{ color: '#ffffff', weight: 4, fillColor: '#2F5BEA', fillOpacity: 1 }}
         interactive={false}
       />
     </>

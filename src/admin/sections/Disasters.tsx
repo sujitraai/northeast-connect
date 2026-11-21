@@ -1,47 +1,62 @@
-import { labelOf, DISASTER_TYPES, formatDate, place, severityOf } from '../lib/labels';
-import { DemoBadge } from '../ui/bits';
-import CrudSection from '../ui/CrudSection';
-import { DISASTER_ICONS } from '../ui/icons';
-import { Row } from '../ui/layout';
+import { DISASTER_ICON } from '../../components/icons';
+import type { Disaster } from '../../lib/database.types';
+import { place, severityOf, timeAgo } from '../lib/labels';
+import { StatusPill } from '../ui/bits';
+import { PublicSwitch, TitleCell } from '../ui/cells';
+import CrudSection, { type SectionProps } from '../ui/CrudSection';
+import type { Column } from '../ui/DataTable';
 import DisasterForm from './DisasterForm';
 
-export default function Disasters() {
+const SEV_ORDER = ['low', 'moderate', 'high', 'severe'];
+
+/** Active first, then most serious. */
+export const sortDisasters = (a: Disaster, b: Disaster) =>
+  Number(b.active) - Number(a.active) || SEV_ORDER.indexOf(b.severity) - SEV_ORDER.indexOf(a.severity);
+
+/** Columns without the Public switch (used read-only on Overview too). */
+export function disasterColumns(): Column<Disaster>[] {
+  return [
+    {
+      header: 'Disaster',
+      cell: (d) => (
+        <TitleCell icon={DISASTER_ICON[d.type]} tone={severityOf(d.severity).tone} title={d.title} demo={d.is_demo} />
+      ),
+    },
+    { header: 'District', cell: (d) => place(d.district, d.state) },
+    {
+      header: 'Severity',
+      cell: (d) => {
+        const s = severityOf(d.severity);
+        return <StatusPill tone={s.tone}>{s.label.toUpperCase()}</StatusPill>;
+      },
+    },
+    { header: 'Radius', cell: (d) => `${Number(d.radius_km)} km` },
+    { header: 'Updated', cell: (d) => timeAgo(d.updated_at), mobile: 'hide' },
+  ];
+}
+
+export default function Disasters({ startNew }: SectionProps) {
   return (
     <CrudSection
+      startNew={startNew}
       table="disasters"
       title="Disasters"
-      intro="Active disasters appear on the public map as a danger zone. Tap one to change or remove it."
+      help="Add a disaster by tapping the map. Switch off Public to hide it from people."
+      listTitle="All disasters"
       addLabel="Add disaster"
+      noun="disaster"
       empty="No disasters yet. Add one when a flood, landslide or earthquake is reported."
-      // Shown first: active ones, then most serious.
-      sort={(a, b) =>
-        Number(b.active) - Number(a.active) ||
-        SEV_ORDER.indexOf(b.severity) - SEV_ORDER.indexOf(a.severity)
-      }
+      sort={sortDisasters}
+      faded={(d) => !d.active}
       Form={DisasterForm}
-      renderRow={(d, edit) => {
-        const sev = severityOf(d.severity);
-        const Icon = DISASTER_ICONS[d.type];
-        return (
-          <Row key={d.id} onClick={edit} accent={d.active ? sev.color : '#334155'}>
-            <div className="flex items-center gap-2 text-slate-400">
-              <Icon />
-              <span className="text-sm">{labelOf(DISASTER_TYPES, d.type)}</span>
-              <span className={`rounded-md border px-1.5 py-0.5 text-xs font-bold ${sev.chip}`}>{sev.label}</span>
-              {d.is_demo && <DemoBadge />}
-            </div>
-            <p className={`mt-1 truncate text-lg font-bold ${d.active ? 'text-white' : 'text-slate-500'}`}>{d.title}</p>
-            <p className="text-sm text-slate-400">
-              {place(d.district, d.state)}, {Number(d.radius_km)} km around
-            </p>
-            <p className="text-sm text-slate-500">
-              {d.active ? 'On the public map' : 'Hidden from the public'}. Added {formatDate(d.created_at)}
-            </p>
-          </Row>
-        );
+      columns={(reload, report) => {
+        const cols = disasterColumns();
+        cols.splice(4, 0, {
+          header: 'Public',
+          cell: (d) => <PublicSwitch table="disasters" id={d.id} active={d.active} onSaved={reload} onError={report} />,
+        });
+        return cols;
       }}
     />
   );
 }
-
-const SEV_ORDER = ['low', 'moderate', 'high', 'severe'];

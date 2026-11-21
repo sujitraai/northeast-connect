@@ -66,7 +66,9 @@ Logging in is not enough on its own. All seeded rows except the national helplin
 | State boundaries | [DataMeet `States/Admin2`](https://github.com/datameet/maps) | MIT |
 | District boundaries | DataMeet `Districts/Census_2011` (2011 district set) | MIT |
 | Satellite imagery | Esri World Imagery (no key) | Esri terms |
-| Dark base map + labels | Esri Canvas Dark Gray Base / Reference (no key) | Esri terms |
+| Light base map + labels | Esri Canvas Light Gray Base / Reference (no key) | Esri terms |
+| Labels on satellite | Esri Canvas Dark Gray Reference (no key) | Esri terms |
+| Font | Plus Jakarta Sans (bundled via @fontsource) | SIL Open Font License |
 
 The boundary files in `public/data/` are generated. To rebuild them:
 

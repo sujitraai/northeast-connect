@@ -25,7 +25,8 @@ to add disasters, alerts, contacts and NGOs.
 - Vite + React + TypeScript
 - Tailwind CSS
 - Leaflet + react-leaflet
-- Base maps: Esri World Imagery (satellite) + Esri dark (no API keys)
+- Base maps: Esri Light Gray (default) + Esri World Imagery (satellite)
+  (no API keys)
 - State/district boundaries: DataMeet India GeoJSON (Census 2011)
 - Live weather: RainViewer radar tiles (free, no key)
 - Turf.js for distance / inside-zone calculations
@@ -64,13 +65,34 @@ Public side can only READ. Only a logged-in admin can add/edit/delete.
 9. NGOs and help groups active at a disaster site (map layer + list)
 10. Offline support + language switcher (English, Assamese, Hindi, Bengali)
 ## Design direction
-- Use the frontend-design skill for all UI work
-- Feels like a calm, serious emergency tool, not a generic AI template
-- Dark map UI with high-contrast panels; avoid purple gradients
-- Clear type hierarchy: big bold headings, short labels
-- Status colours only for meaning: green Safe, amber Watch, red Danger
-- Rounded cards with subtle shadows, consistent spacing
-- Smooth but quick animations (alerts slide in, zones pulse)
+Follow design-reference/DESIGN.md and index.html exactly for all UI. Use the frontend-design skill.
+
+## Alerts and life-saving flow
+- Levels: Safe → Watch (within 25 km, not approaching) → Early warning
+  (approaching, ETA shown) → Danger (inside zone or ETA < 30 min).
+  Rhino mood follows the level.
+- Loud alert on Early warning and Danger: Web Audio siren, vibration,
+  full-screen banner/takeover, browser notification. "Turn on alerts"
+  screen on first open.
+- Alert shows: what disaster, how bad, time to arrival (labelled
+  Estimate/Simulation), steps for that disaster type, nearest shelter
+  outside the zone with route line + Google Maps link, call 112 / 1077 /
+  nearest NGO, Alert family.
+- Alert family: I'm safe / I need help → WhatsApp or SMS with location
+  link; up to 3 contacts saved on the phone only.
+- ETA: admin sets spread speed (km/h); ETA = distance to zone edge ÷ speed;
+  Simulate grows the zone at that speed.
+
+## Demo mode (live presentation)
+- Flow: admin adds disaster on laptop → phone updates live (<2 s) → admin
+  presses Simulate → phone gets Early warning, then Danger → admin adds
+  NGO → phone NGOs tab shows it
+- Public app: long-press map sets a "demo location" (small pill shows it;
+  tap to clear)
+- Admin: presets ("Flood near demo location", "Landslide near demo
+  location", "Add NGO at this disaster") and a "Reset demo" button
+
+Build order: redesign → 4 → 5 → 6 → demo mode → 9 → 8 → deploy → 7 → 10.
 
 ## Rules
 - Build one feature at a time; app must run after every step

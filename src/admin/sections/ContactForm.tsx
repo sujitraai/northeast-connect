@@ -47,13 +47,14 @@ export default function ContactForm({ row, onDone, onCancel }: FormProps<Contact
 
   return (
     <FormShell
-      title={row ? 'Edit contact' : 'Add a contact'}
+      title={row ? 'Edit contact' : 'New contact'}
+      help="People tap this number to call. Real numbers need a source."
       onBack={onCancel}
       onSubmit={submit}
       onDelete={row ? remove : undefined}
       saving={saving}
       error={error}
-      saveLabel={row ? 'Save changes' : 'Add contact'}
+      saveLabel={row ? 'Save changes' : 'Save contact'}
     >
       <TextField label="Name" placeholder="e.g. Dhemaji district control room" value={name} onChange={setName} maxLength={120} />
       <TextField

@@ -1,4 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
+import { Icon } from '../components/icons';
+import Rhino from '../components/Rhino';
 import { supabase } from '../lib/supabase';
 import { Notice, PrimaryButton } from './ui/bits';
 import { TextField } from './ui/fields';
@@ -6,14 +8,22 @@ import { TextField } from './ui/fields';
 /** Frame for the login and "not allowed" screens. */
 export function AuthFrame({ children }: { children: ReactNode }) {
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-[#0b0f14] p-4">
+    <main className="flex min-h-dvh items-center justify-center bg-gradient-to-b from-primary-soft to-bg to-50% p-4">
       <div className="w-full max-w-sm">
-        <div className="mb-8">
-          <p className="text-base font-semibold text-sky-300">Northeast Connect</p>
-          <h1 className="text-4xl font-extrabold tracking-tight text-white">Admin</h1>
+        <div className="rounded-card bg-white p-6 shadow-soft">
+          <div className="mb-6 flex items-center gap-3">
+            <span className="grid size-14 shrink-0 place-items-center rounded-inner bg-safe-soft">
+              <Rhino className="h-11 w-12" />
+            </span>
+            <div>
+              <p className="text-[13px] font-bold text-muted">Northeast Connect</p>
+              <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.02em] text-ink">Admin login</h1>
+            </div>
+          </div>
+          {children}
         </div>
-        {children}
-        <a href="/" className="mt-8 inline-block text-base font-semibold text-slate-400 hover:text-white">
+        <a href="/" className="mt-5 inline-flex min-h-11 items-center gap-1.5 px-2 text-sm font-bold text-muted hover:text-ink">
+          <Icon name="back" size={16} />
           Back to the public map
         </a>
       </div>
@@ -56,12 +66,12 @@ export default function LoginScreen() {
         <TextField label="Email" type="email" inputMode="email" autoComplete="username" value={email} onChange={setEmail} />
         <TextField label="Password" type="password" autoComplete="current-password" value={password} onChange={setPassword} />
         {error && <Notice tone="error">{error}</Notice>}
-        <div className="pt-1 [&>button]:w-full">
+        <div className="pt-1 [&>button]:h-12 [&>button]:w-full [&>button]:text-[15px]">
           <PrimaryButton type="submit" busy={busy}>
             {busy ? 'Logging in…' : 'Log in'}
           </PrimaryButton>
         </div>
-        <p className="text-sm text-slate-500">
+        <p className="text-[12.5px] font-semibold text-muted">
           Only admins can log in. There is no sign-up. Ask an existing admin to add you.
         </p>
       </form>

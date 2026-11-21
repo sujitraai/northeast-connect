@@ -1,119 +1,75 @@
 import type { FormEvent, ReactNode } from 'react';
-import { BackIcon, PlusIcon } from './icons';
+import { Icon } from '../../components/icons';
 import { DeleteButton, GhostButton, Notice, PrimaryButton } from './bits';
 
-export function SectionHeader({
-  title,
-  count,
-  addLabel,
-  onAdd,
-  children,
-}: {
-  title: string;
-  count?: number;
-  addLabel?: string;
-  onAdd?: () => void;
-  children?: ReactNode;
-}) {
+/** Page title, one line of help, actions on the right. */
+export function PageHeader({ title, help, actions }: { title: string; help?: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="mb-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h2 className="text-3xl font-extrabold tracking-tight text-white">
-          {title}
-          {count !== undefined && (
-            <span className="ml-3 align-middle text-lg font-semibold text-slate-500">{count}</span>
-          )}
-        </h2>
-        {onAdd && addLabel && (
-          <PrimaryButton onClick={onAdd}>
-            <PlusIcon />
-            {addLabel}
-          </PrimaryButton>
-        )}
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+      <div className="min-w-0">
+        <h2 className="text-[26px] leading-tight font-extrabold tracking-[-0.02em] text-ink">{title}</h2>
+        {help && <p className="mt-1 max-w-[62ch] text-[13.5px] font-semibold text-muted">{help}</p>}
       </div>
-      {children && <div className="mt-2 max-w-prose text-base text-slate-400">{children}</div>}
+      {actions && <div className="flex flex-wrap gap-2.5">{actions}</div>}
     </div>
   );
 }
 
-/** One panel holding the rows, split by lines (not a stack of cards). */
-export function ListPanel({
-  loading,
-  error,
-  empty,
+/** White rounded panel; optional title row with something on the right. */
+export function Panel({
+  title,
+  side,
   children,
+  className = '',
 }: {
-  loading: boolean;
-  error: string | null;
-  empty: ReactNode;
-  children: ReactNode[];
-}) {
-  if (error) return <Notice tone="error">{error}</Notice>;
-  if (loading && children.length === 0) {
-    return <p className="py-10 text-center text-base text-slate-400">Loading…</p>;
-  }
-  if (children.length === 0) {
-    return (
-      <div className="rounded-2xl border border-dashed border-white/15 px-5 py-10 text-center text-base text-slate-400">
-        {empty}
-      </div>
-    );
-  }
-  return (
-    <ul className="divide-y divide-white/10 overflow-hidden rounded-2xl border border-white/10 bg-slate-900/70">
-      {children}
-    </ul>
-  );
-}
-
-/** A tappable row. `accent` paints a status bar on the left edge. */
-export function Row({
-  onClick,
-  accent,
-  children,
-  end,
-}: {
-  onClick: () => void;
-  accent?: string;
+  title?: ReactNode;
+  side?: ReactNode;
   children: ReactNode;
-  end?: ReactNode;
+  className?: string;
 }) {
   return (
-    <li className="relative">
-      {accent && (
-        <span aria-hidden className="absolute inset-y-0 left-0 w-1.5" style={{ background: accent }} />
+    <section className={`rounded-card bg-white p-4 sm:p-[18px] ${className}`}>
+      {(title || side) && (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-base font-extrabold text-ink">{title}</h3>
+          {side}
+        </div>
       )}
-      <button
-        type="button"
-        onClick={onClick}
-        className="flex w-full items-center gap-3 py-4 pr-4 pl-5 text-left transition hover:bg-white/[0.04] focus-visible:bg-white/[0.06] focus-visible:outline-none"
-      >
-        <div className="min-w-0 flex-1">{children}</div>
-        {end}
-        <span className="shrink-0 text-sm font-semibold text-sky-300">Edit</span>
-      </button>
-    </li>
+      {children}
+    </section>
   );
 }
 
-/** Full-page form with a back link, title and Save / Cancel / Delete. */
+/** Calm, helpful text when a list is empty or still loading. */
+export function ListMessage({ children }: { children: ReactNode }) {
+  return <p className="rounded-inner bg-bg px-5 py-10 text-center text-sm font-semibold text-muted">{children}</p>;
+}
+
+/**
+ * Add / edit page: back link, title, then the form card. With `map`, the map
+ * card sits on the left and the form on the right (stacked on phones).
+ */
 export function FormShell({
   title,
+  help,
   onBack,
   onSubmit,
   onDelete,
   saving,
   error,
   saveLabel,
+  map,
   children,
 }: {
   title: string;
+  help?: ReactNode;
   onBack: () => void;
   onSubmit: () => void;
   onDelete?: () => void;
   saving: boolean;
   error: string | null;
   saveLabel: string;
+  map?: ReactNode;
   children: ReactNode;
 }) {
   const submit = (e: FormEvent) => {
@@ -121,35 +77,38 @@ export function FormShell({
     onSubmit();
   };
   return (
-    <form onSubmit={submit} noValidate className="max-w-2xl">
+    <form onSubmit={submit} noValidate>
       <button
         type="button"
         onClick={onBack}
-        className="-ml-2 mb-3 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-base font-semibold text-slate-300 hover:text-white"
+        className="-ml-2 mb-2 inline-flex min-h-11 items-center gap-1 rounded-xl px-2 text-sm font-bold text-muted hover:text-ink"
       >
-        <BackIcon />
+        <Icon name="back" size={18} />
         Back to list
       </button>
-      <h2 className="mb-6 text-3xl font-extrabold tracking-tight text-white">{title}</h2>
+      <PageHeader title={title} help={help} />
 
-      <div className="space-y-5">{children}</div>
-
-      {error && (
-        <div className="mt-6">
-          <Notice tone="error">{error}</Notice>
-        </div>
-      )}
-
-      <div className="sticky bottom-0 z-10 -mx-4 mt-8 flex flex-wrap items-center gap-3 border-t border-white/10 bg-[#0b0f14]/95 px-4 py-4 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0">
-        <PrimaryButton type="submit" busy={saving}>
-          {saving ? 'Saving…' : saveLabel}
-        </PrimaryButton>
-        <GhostButton onClick={onBack}>Cancel</GhostButton>
-        {onDelete && (
-          <div className="ml-auto">
-            <DeleteButton onConfirm={onDelete} busy={saving} />
+      <div className={map ? 'grid items-start gap-4 lg:grid-cols-[1.35fr_1fr]' : 'max-w-2xl'}>
+        {map}
+        <Panel>
+          <div className="space-y-4">{children}</div>
+          {error && (
+            <div className="mt-4">
+              <Notice tone="error">{error}</Notice>
+            </div>
+          )}
+          <div className="mt-5 flex flex-wrap gap-2.5">
+            <PrimaryButton type="submit" busy={saving} className="flex-1">
+              {saving ? 'Saving…' : saveLabel}
+            </PrimaryButton>
+            <GhostButton onClick={onBack}>Cancel</GhostButton>
           </div>
-        )}
+          {onDelete && (
+            <div className="mt-4 border-t border-line pt-4">
+              <DeleteButton onConfirm={onDelete} busy={saving} />
+            </div>
+          )}
+        </Panel>
       </div>
     </form>
   );

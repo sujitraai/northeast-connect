@@ -20,7 +20,7 @@ export default function AdminApp() {
     case 'loading':
       return (
         <AuthFrame>
-          <p className="text-base text-slate-400">Checking your account…</p>
+          <p className="text-sm font-semibold text-muted">Checking your account…</p>
         </AuthFrame>
       );
     case 'signed-out':

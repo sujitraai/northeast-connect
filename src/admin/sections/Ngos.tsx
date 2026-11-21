@@ -1,36 +1,40 @@
 import { useRows } from '../lib/data';
-import { DemoBadge } from '../ui/bits';
-import CrudSection from '../ui/CrudSection';
-import { Row } from '../ui/layout';
+import { PublicSwitch, TitleCell } from '../ui/cells';
+import CrudSection, { type SectionProps } from '../ui/CrudSection';
 import NgoForm from './NgoForm';
 
-export default function Ngos() {
+export default function Ngos({ startNew }: SectionProps) {
   const disasters = useRows('disasters');
-  const titleOf = (id: string) => disasters.rows.find((d) => d.id === id)?.title ?? 'a disaster';
+  const titleOf = (id: string) => disasters.rows.find((d) => d.id === id)?.title ?? 'A disaster';
 
   return (
     <CrudSection
+      startNew={startNew}
       table="ngos"
       title="NGOs and help groups"
-      intro="Groups helping at a disaster site. Link each one to the disaster they are working at."
+      help="Groups helping at a disaster site. Link each one to the disaster they are working at."
+      listTitle="All groups"
       addLabel="Add group"
+      noun="group"
       empty="No groups yet. Add NGOs and volunteers who are helping on the ground."
       sort={(a, b) => Number(b.active) - Number(a.active)}
+      faded={(n) => !n.active}
       Form={NgoForm}
-      renderRow={(n, edit) => (
-        <Row key={n.id} onClick={edit}>
-          <div className="flex items-center gap-2 text-sm text-slate-400">
-            {n.active ? 'Active' : 'Not active'}
-            {n.is_demo && <DemoBadge />}
-          </div>
-          <p className={`mt-0.5 truncate text-lg font-bold ${n.active ? 'text-white' : 'text-slate-500'}`}>{n.name}</p>
-          {n.focus && <p className="truncate text-sm text-slate-400">{n.focus}</p>}
-          <p className="text-sm text-slate-500">
-            {n.disaster_id ? `Working at: ${titleOf(n.disaster_id)}` : 'Not linked to a disaster'}
-            {n.lat == null && ', no map location'}
-          </p>
-        </Row>
-      )}
+      columns={(reload, report) => [
+        {
+          header: 'Group',
+          cell: (n) => <TitleCell icon="users" tone="primary" title={n.name} sub={n.focus} demo={n.is_demo} />,
+        },
+        {
+          header: 'Working at',
+          cell: (n) => (n.disaster_id ? titleOf(n.disaster_id) : 'Not linked'),
+        },
+        { header: 'Map location', cell: (n) => (n.lat == null ? 'None' : 'Set'), mobile: 'hide' },
+        {
+          header: 'Public',
+          cell: (n) => <PublicSwitch table="ngos" id={n.id} active={n.active} onSaved={reload} onError={report} />,
+        },
+      ]}
     />
   );
 }

@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Northeast Connect – Design reference v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F6FB; --card:#FFFFFF; --ink:#0F172A; --ink-2:#334155; --muted:#64748B; --line:#E5E9F2;
+    --primary:#2F5BEA; --primary-soft:#E8EEFF; --navy:#0F1B3D;
+    --safe:#16A34A; --safe-soft:#E6F6EC; --safe-mascot:#6CC4A1;
+    --watch:#D97706; --watch-soft:#FFF3DC; --watch-mascot:#F6B54A;
+    --danger:#DC2626; --danger-soft:#FDECEC;
+    --warn:#EA580C; --warn-soft:#FFEDD5;
+    --r-xl:28px; --r-lg:22px; --r-md:16px; --r-pill:999px;
+    --shadow:0 10px 30px rgba(15,23,42,.10), 0 2px 6px rgba(15,23,42,.06);
+    --font:'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:#E9EDF5;color:var(--ink);padding:48px 40px 80px}
+  .page-head{max-width:1240px;margin:0 auto 36px}
+  .page-head h1{font-size:30px;font-weight:800;letter-spacing:-.02em}
+  .page-head p{color:var(--muted);margin-top:8px;font-size:15px;max-width:760px;line-height:1.55}
+  .section-title{max-width:1240px;margin:44px auto 18px;font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .phones{max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;gap:36px}
+  .shot{display:flex;flex-direction:column;gap:12px}
+  .caption{font-size:14px;font-weight:700}
+  .caption span{display:block;font-weight:500;color:var(--muted);font-size:12.5px;margin-top:3px;max-width:375px;line-height:1.45}
+
+  /* ---------- phone ---------- */
+  .phone{width:375px;height:780px;border-radius:46px;background:#0B1020;padding:9px;box-shadow:0 30px 60px rgba(15,23,42,.25)}
+  .screen{position:relative;width:100%;height:100%;border-radius:38px;overflow:hidden;background:#EAF0E6}
+  .statusbar{position:absolute;top:0;left:0;right:0;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-size:14px;font-weight:700;z-index:20;color:var(--ink)}
+  .statusbar.light{color:#fff}
+  .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:110px;height:30px;background:#0B1020;border-radius:20px;z-index:21}
+  .map{position:absolute;inset:0}
+  .map svg{width:100%;height:100%;display:block}
+
+  .topcard{position:absolute;top:52px;left:12px;right:12px;z-index:10;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-radius:var(--r-lg);padding:12px 14px 12px 12px;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow)}
+  .mascot{flex:0 0 64px;height:64px;border-radius:20px;display:grid;place-items:center}
+  .mascot svg{width:58px;height:54px}
+  .greet{font-size:12px;color:var(--muted);font-weight:600}
+  .headline{font-size:16.5px;font-weight:800;letter-spacing:-.01em;margin-top:1px;line-height:1.25}
+  .bubble{font-size:12.5px;color:var(--ink-2);margin-top:4px;line-height:1.4}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--r-pill);font-size:11.5px;font-weight:800;letter-spacing:.02em}
+  .pill i{width:7px;height:7px;border-radius:50%;background:currentColor;display:block}
+  .pill.safe{background:var(--safe-soft);color:var(--safe)}
+  .pill.watch{background:var(--watch-soft);color:var(--watch)}
+  .pill.danger{background:var(--danger-soft);color:var(--danger)}
+  .pill.demo{background:#F1F4FA;color:var(--muted);font-weight:700}
+
+  .rail{position:absolute;right:12px;top:186px;z-index:9;display:flex;flex-direction:column;gap:10px}
+  .fab{width:46px;height:46px;border-radius:16px;background:#fff;display:grid;place-items:center;box-shadow:var(--shadow);color:var(--ink-2)}
+  .fab.on{background:var(--primary);color:#fff}
+
+  .sheet{position:absolute;left:0;right:0;bottom:0;z-index:11;background:#fff;border-radius:var(--r-xl) var(--r-xl) 0 0;padding:10px 16px 104px;box-shadow:0 -12px 34px rgba(15,23,42,.10)}
+  .handle{width:40px;height:5px;border-radius:5px;background:#D8DEE9;margin:0 auto 12px}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .stat{background:var(--bg);border-radius:20px;padding:12px 14px}
+  .stat .lbl{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--muted)}
+  .stat .val{font-size:22px;font-weight:800;margin-top:6px;letter-spacing:-.02em}
+  .stat .sub{font-size:11.5px;color:var(--muted);margin-top:1px;font-weight:600}
+  .chips{display:flex;gap:8px;margin:12px 0;overflow:hidden}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:var(--r-pill);background:#F1F4FA;font-size:13px;font-weight:700;color:var(--ink-2);white-space:nowrap}
+  .chip.on{background:var(--primary-soft);color:var(--primary)}
+  .cta{height:54px;border-radius:18px;background:var(--navy);color:#fff;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:10px}
+  .cta .sos{width:26px;height:26px;border-radius:50%;background:var(--danger);display:grid;place-items:center}
+  .cta.red{background:var(--danger)}
+  .btn-ghost{height:50px;border-radius:16px;border:2px solid var(--line);background:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--ink)}
+
+  .nav{position:absolute;left:14px;right:14px;bottom:14px;z-index:15;height:68px;border-radius:var(--r-pill);background:rgba(255,255,255,.96);backdrop-filter:blur(14px);box-shadow:0 12px 30px rgba(15,23,42,.16), 0 0 0 1px rgba(15,23,42,.04);display:flex;align-items:center;justify-content:space-around;padding:0 8px}
+  .nav a{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:700;color:#94A3B8;text-decoration:none;padding:8px 12px;border-radius:var(--r-pill);position:relative}
+  .nav a.on{background:var(--navy);color:#fff;flex-direction:row;gap:7px;font-size:13px;padding:12px 16px}
+  .nav .badge{position:absolute;top:4px;right:10px;width:8px;height:8px;border-radius:50%;background:var(--danger);border:2px solid #fff}
+
+  .alertcard{display:flex;gap:12px;padding:12px;border-radius:20px;background:var(--watch-soft);margin-bottom:12px}
+  .alertcard .ic{flex:0 0 40px;height:40px;border-radius:14px;background:#fff;display:grid;place-items:center;color:var(--watch)}
+  .alertcard b{font-size:14px;display:block}
+  .alertcard p{font-size:12.5px;color:var(--ink-2);margin-top:2px;line-height:1.4}
+  .meta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+
+  /* tall sheet (Help / NGOs) */
+  .sheet.tall{top:150px;padding-top:10px;overflow:hidden}
+  .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .sheet-head h2{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .sheet-head .x{width:36px;height:36px;border-radius:12px;background:var(--bg);display:grid;place-items:center;color:var(--muted)}
+  .sub-head{font-size:13px;color:var(--muted);font-weight:600}
+  .group-title{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 2px 8px}
+  .row{display:flex;align-items:center;gap:12px;padding:10px;border-radius:18px;background:var(--bg);margin-bottom:8px}
+  .row .ic{flex:0 0 42px;height:42px;border-radius:14px;display:grid;place-items:center}
+  .row .t{flex:1;min-width:0}
+  .row .t b{font-size:14.5px;display:block}
+  .row .t span{font-size:12px;color:var(--muted);font-weight:600}
+  .num{font-size:15px;font-weight:800;margin-right:4px}
+  .call{flex:0 0 42px;height:42px;border-radius:50%;background:var(--safe);color:#fff;display:grid;place-items:center}
+  .go{flex:0 0 42px;height:42px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center}
+  .ngo{background:var(--bg);border-radius:20px;padding:14px;margin-bottom:10px}
+  .ngo .top{display:flex;align-items:center;gap:12px}
+  .ngo .logo{flex:0 0 44px;height:44px;border-radius:14px;display:grid;place-items:center;font-weight:800;color:#fff}
+  .ngo b{font-size:15px;display:block}
+  .ngo .top span{font-size:12px;color:var(--muted);font-weight:600}
+  .tags{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}
+  .tag{font-size:11.5px;font-weight:700;padding:5px 10px;border-radius:var(--r-pill);background:#fff;color:var(--ink-2)}
+  .ngo .acts{display:flex;gap:8px}
+  .ngo .acts div{flex:1;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13.5px;font-weight:800}
+
+  /* danger takeover */
+  .danger-top{position:absolute;inset:0 0 auto 0;height:372px;background:radial-gradient(120% 90% at 50% 0%, #EF4444 0%, #DC2626 45%, #B91C1C 100%);color:#fff;padding:62px 22px 0;text-align:center}
+  .warn{width:78px;height:78px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center;margin:0 auto 14px;position:relative}
+  .warn::after{content:"";position:absolute;inset:-10px;border-radius:50%;border:2px solid rgba(255,255,255,.35);animation:ring 1.8s ease-out infinite}
+  @keyframes ring{from{transform:scale(.85);opacity:1}to{transform:scale(1.3);opacity:0}}
+  .danger-top .kicker{font-size:12.5px;font-weight:800;letter-spacing:.16em;opacity:.9}
+  .danger-top h2{font-size:27px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
+  .danger-top p{font-size:15px;opacity:.95;margin-top:8px;line-height:1.45}
+  .sim{display:inline-block;margin-top:12px;font-size:11.5px;font-weight:800;padding:5px 11px;border-radius:var(--r-pill);background:rgba(255,255,255,.2)}
+  .danger-body{position:absolute;left:12px;right:12px;top:322px;bottom:14px;display:flex;flex-direction:column;gap:10px}
+  .card{background:#fff;border-radius:var(--r-lg);padding:14px;box-shadow:var(--shadow)}
+  .steps .s{display:flex;gap:12px;align-items:center;padding:7px 0}
+  .steps .n{flex:0 0 30px;height:30px;border-radius:10px;background:var(--danger-soft);color:var(--danger);font-weight:800;display:grid;place-items:center;font-size:14px}
+  .steps .s b{font-size:14.5px}
+  .card-title{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .shelter{display:flex;align-items:center;gap:12px}
+  .shelter .ic{flex:0 0 46px;height:46px;border-radius:15px;background:var(--safe-soft);color:var(--safe);display:grid;place-items:center}
+  .shelter b{font-size:15px;display:block}
+  .shelter span{font-size:12.5px;color:var(--muted);font-weight:600}
+
+  /* onboarding */
+  .onb{position:absolute;inset:0;background:linear-gradient(180deg,#E8EEFF 0%,#F4F6FB 46%);padding:70px 22px 26px;display:flex;flex-direction:column;text-align:center}
+  .onb .hero{width:150px;height:150px;border-radius:50%;background:#fff;margin:6px auto 18px;display:grid;place-items:center;position:relative;box-shadow:var(--shadow)}
+  .onb .hero svg{width:112px;height:104px}
+  .onb .hero::before,.onb .hero::after{content:"";position:absolute;inset:-14px;border-radius:50%;border:2px solid rgba(47,91,234,.18)}
+  .onb .hero::after{inset:-30px;border-color:rgba(47,91,234,.09)}
+  .onb h2{font-size:27px;font-weight:800;letter-spacing:-.02em}
+  .onb p{font-size:14.5px;color:var(--ink-2);margin-top:8px;line-height:1.5}
+  .perm{display:flex;align-items:center;gap:12px;background:#fff;border-radius:18px;padding:11px 12px;margin-top:9px;text-align:left}
+  .perm .ic{flex:0 0 40px;height:40px;border-radius:13px;display:grid;place-items:center}
+  .perm b{font-size:14px;display:block}
+  .perm span{font-size:12px;color:var(--muted);font-weight:600}
+  .perm .ok{margin-left:auto;color:var(--safe)}
+  .note{font-size:12px;color:var(--muted);font-weight:700;margin-top:12px;display:flex;align-items:center;justify-content:center;gap:6px}
+  /* early warning */
+  .warnbar{position:absolute;top:50px;left:12px;right:12px;z-index:10;border-radius:var(--r-lg);overflow:hidden;box-shadow:0 14px 30px rgba(234,88,12,.30)}
+  .warnbar .head{background:linear-gradient(135deg,#F97316,#EA580C);color:#fff;padding:12px 14px;display:flex;gap:12px;align-items:center}
+  .warnbar .mascot{flex:0 0 58px;height:58px;background:rgba(255,255,255,.22);border-radius:18px}
+  .warnbar .mascot svg{width:52px;height:48px}
+  .warnbar .k{font-size:11.5px;font-weight:800;letter-spacing:.12em;opacity:.95}
+  .warnbar .eta{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-top:2px}
+  .warnbar .eta small{font-size:13px;font-weight:700;opacity:.9;display:block;letter-spacing:0}
+  .warnbar .foot{background:#fff;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:800;color:var(--warn)}
+  .siren{display:flex;align-items:center;gap:6px}
+  .siren i{width:8px;height:8px;border-radius:50%;background:var(--warn);animation:blink 1s infinite}
+  @keyframes blink{50%{opacity:.2}}
+  .mute{color:var(--muted);display:flex;align-items:center;gap:5px}
+  .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  .go-card{display:flex;align-items:center;gap:12px;padding:12px;border-radius:20px;background:var(--safe-soft);margin-bottom:10px}
+  .go-card .ic{flex:0 0 46px;height:46px;border-radius:15px;background:#fff;color:var(--safe);display:grid;place-items:center}
+  .go-card b{font-size:15px;display:block}
+  .go-card span{font-size:12.5px;color:var(--ink-2);font-weight:600}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .two .b{height:48px;border-radius:15px;display:flex;align-items:center;justify-content:center;gap:7px;font-weight:800;font-size:14px}
+  .todo{display:flex;gap:6px;margin:10px 0;flex-wrap:nowrap}
+  .todo span{white-space:nowrap;font-size:11.5px;font-weight:700;padding:6px 10px;border-radius:12px;background:var(--bg);color:var(--ink-2)}
+  /* family */
+  .choice{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 4px}
+  .choice div{border-radius:20px;padding:14px 12px;display:flex;flex-direction:column;gap:6px;font-weight:800;font-size:15px}
+  .choice div span{font-size:11.5px;font-weight:600;opacity:.85}
+  .choice .safe{background:var(--safe-soft);color:var(--safe);box-shadow:0 0 0 2px transparent inset}
+  .choice .help{background:var(--danger);color:#fff;box-shadow:0 8px 20px rgba(220,38,38,.28)}
+  .contact{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:16px;background:var(--bg);margin-bottom:7px}
+  .avatar{flex:0 0 38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#fff;font-size:14px}
+  .contact b{font-size:14px;display:block}
+  .contact span{font-size:12px;color:var(--muted);font-weight:600}
+  .tick{margin-left:auto;width:26px;height:26px;border-radius:8px;background:var(--primary);color:#fff;display:grid;place-items:center}
+  .msg{background:#E7FFDB;border-radius:16px 16px 16px 4px;padding:10px 12px;font-size:13px;line-height:1.45;color:#1E293B;margin:8px 0 10px;font-weight:500}
+  .msg a{color:#2563EB;text-decoration:none;font-weight:700}
+  .wa{background:#25D366;color:#fff}
+  .sms{background:#fff;color:var(--ink);box-shadow:0 0 0 2px var(--line) inset}
+
+  /* ---------- admin desktop ---------- */
+  .desk{max-width:1240px;margin:0 auto;border-radius:22px;overflow:hidden;background:var(--bg);display:grid;grid-template-columns:236px 1fr;box-shadow:0 30px 60px rgba(15,23,42,.18)}
+  .side{background:#fff;border-right:1px solid var(--line);padding:22px 16px;display:flex;flex-direction:column;gap:4px}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:22px;padding:0 6px}
+  .brand .logo{width:40px;height:40px;border-radius:13px;background:var(--safe-soft);display:grid;place-items:center}
+  .brand .logo svg{width:34px;height:32px}
+  .brand b{font-size:15px;display:block;font-weight:800}
+  .brand span{font-size:11.5px;color:var(--muted);font-weight:700}
+  .side a{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:14px;font-size:14px;font-weight:700;color:var(--ink-2);text-decoration:none}
+  .side a.on{background:var(--primary-soft);color:var(--primary)}
+  .side .count{margin-left:auto;font-size:11.5px;background:var(--bg);color:var(--muted);padding:2px 8px;border-radius:var(--r-pill)}
+  .side a.on .count{background:#fff;color:var(--primary)}
+  .side .me{margin-top:auto;padding:12px;border-radius:16px;background:var(--bg);font-size:12px;color:var(--muted);font-weight:600}
+  .side .me b{display:block;color:var(--ink);font-size:13px}
+  .main{padding:26px 28px 28px;min-width:0}
+  .main-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .main-head h2{font-size:26px;font-weight:800;letter-spacing:-.02em}
+  .main-head p{font-size:13.5px;color:var(--muted);font-weight:600;margin-top:2px}
+  .btn{height:44px;padding:0 18px;border-radius:14px;display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:14px}
+  .btn.primary{background:var(--navy);color:#fff}
+  .btn.light{background:#fff;color:var(--ink);box-shadow:0 0 0 1px var(--line) inset}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .kpi{background:#fff;border-radius:20px;padding:16px 18px;display:flex;align-items:center;gap:14px}
+  .kpi .ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center}
+  .kpi b{font-size:24px;font-weight:800;display:block;letter-spacing:-.02em}
+  .kpi span{font-size:12.5px;color:var(--muted);font-weight:700}
+  .split{display:grid;grid-template-columns:1.35fr 1fr;gap:16px;margin-bottom:16px}
+  .panel{background:#fff;border-radius:22px;padding:18px}
+  .panel h3{font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:space-between}
+  .mapbox{position:relative;height:468px;border-radius:18px;overflow:hidden;margin-top:12px}
+  .hint{position:absolute;left:12px;top:12px;background:rgba(255,255,255,.95);padding:8px 12px;border-radius:12px;font-size:12.5px;font-weight:700;display:flex;gap:8px;align-items:center;box-shadow:var(--shadow)}
+  .field{margin-top:14px}
+  .field label{display:block;font-size:12.5px;font-weight:800;color:var(--ink-2);margin-bottom:7px}
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .seg div{padding:9px 13px;border-radius:12px;background:var(--bg);font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;color:var(--ink-2)}
+  .seg div.on{background:var(--primary-soft);color:var(--primary);box-shadow:0 0 0 2px var(--primary) inset}
+  .seg div.on.w{background:var(--watch-soft);color:var(--watch);box-shadow:0 0 0 2px var(--watch) inset}
+  .slider{display:flex;align-items:center;gap:12px}
+  .track{flex:1;height:8px;border-radius:8px;background:var(--line);position:relative}
+  .track i{position:absolute;left:0;top:0;bottom:0;width:38%;background:var(--primary);border-radius:8px}
+  .track b{position:absolute;left:38%;top:50%;width:22px;height:22px;border-radius:50%;background:#fff;border:4px solid var(--primary);transform:translate(-50%,-50%)}
+  .slider span{font-weight:800;font-size:14px;min-width:46px}
+  .input{height:44px;border-radius:12px;background:var(--bg);display:flex;align-items:center;padding:0 12px;font-size:13.5px;font-weight:600;color:var(--ink-2);gap:8px}
+  .auto{margin-left:auto;font-size:11px;font-weight:800;color:var(--safe);background:var(--safe-soft);padding:3px 8px;border-radius:var(--r-pill)}
+  .textarea{height:64px;align-items:flex-start;padding-top:12px;color:var(--muted)}
+  .toggles{display:flex;gap:18px;margin-top:14px}
+  .tg{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
+  .sw{width:40px;height:24px;border-radius:24px;background:var(--line);position:relative}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .sw.on{background:var(--safe)}
+  .sw.on::after{left:19px}
+  .form-acts{display:flex;gap:10px;margin-top:16px}
+  table{width:100%;border-collapse:collapse;margin-top:10px}
+  th{text-align:left;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800;padding:10px 12px;border-bottom:1px solid var(--line)}
+  td{padding:12px;font-size:13.5px;font-weight:600;border-bottom:1px solid var(--line);color:var(--ink-2)}
+  td b{color:var(--ink);font-weight:800}
+  .tico{width:34px;height:34px;border-radius:11px;display:inline-grid;place-items:center;vertical-align:middle;margin-right:10px}
+  .acts{display:flex;gap:6px}
+  .acts div{width:34px;height:34px;border-radius:11px;background:var(--bg);display:grid;place-items:center;color:var(--muted)}
+
+  /* tokens */
+  .tokens{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+  .tok{background:#fff;border-radius:18px;padding:12px;display:flex;gap:12px;align-items:center}
+  .tok i{width:44px;height:44px;border-radius:13px;display:block;box-shadow:0 0 0 1px rgba(15,23,42,.06) inset}
+  .tok b{font-size:13.5px;display:block}
+  .tok span{font-size:12px;color:var(--muted);font-weight:600}
+  .mascots{max-width:1240px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap}
+  .mcard{background:#fff;border-radius:22px;padding:18px 22px;display:flex;align-items:center;gap:16px;min-width:290px}
+  .mcard .m{width:92px;height:92px;border-radius:26px;display:grid;place-items:center}
+  .mcard .m svg{width:84px;height:78px}
+  .mcard b{font-size:15px;display:block}
+  .mcard span{font-size:12.5px;color:var(--muted);font-weight:600;line-height:1.45;display:block;margin-top:4px;max-width:180px}
+
+  .pulse{animation:pulse 2.2s ease-in-out infinite;transform-origin:center;transform-box:fill-box}
+  @keyframes pulse{0%,100%{opacity:.9}50%{opacity:.35}}
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>Northeast Connect — Design reference v2</h1>
+  <p>Mobile-first public app + desktop admin panel. Light, soft and friendly for common people; the map always stays in the centre. Status colours are used only for meaning (green Safe, amber Watch, red Danger). Alert levels: Safe → Watch → Early warning → Danger. Phone numbers 112 / 100 / 101 / 108 / 1070 / 1077 are real national helplines; every place, shelter, NGO and family contact here is demo data.</p>
+</div>
+
+<div class="section-title">Public app · mobile</div>
+<div class="phones">
+
+
+  <!-- 0. TURN ON ALERTS -->
+  <div class="shot">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="statusbar"><span>9:41</span><span data-ic="signal"></span></div>
+      <div class="onb">
+        <div class="hero" data-rhino="safe"></div>
+        <h2>Turn on alerts</h2>
+        <p>I'll sound a loud siren if a flood, landslide or earthquake is coming towards you — before it reaches you.</p>
+        <div class="perm"><div class="ic" style="background:var(--danger-soft);color:var(--danger)" data-ic="volume"></div><div><b>Loud siren</b><span>Plays even if the app is in the background</span></div><span class="ok" data-ic="check" data-s="18"></span></div>
+        <div class="perm"><div class="ic" style="background:var(--watch-soft);color:var(--watch)" data-ic="vibrate"></div><div><b>Vibration</b><span>So you feel it in your pocket</span></div><span class="ok" data-ic="check" data-s="18"></span></div>
+        <div class="perm"><div class="ic" style="background:var(--primary-soft);color:var(--primary)" data-ic="pin"></div><div><b>Your location</b><span>Only to check what's near you</span></div><span class="ok" data-ic="check" data-s="18"></span></div>
+        <div style="flex:1"></div>
+        <div class="cta"><span data-ic="bell" data-s="18"></span>Turn on alerts</div>
+        <div class="note"><span data-ic="volume" data-s="14"></span>Keep your phone off silent mode</div>
+      </div>
+    </div></div>
+    <div class="caption">0 · Turn on alerts (first open)<span>One tap unlocks sound, vibration, notifications and location. Browsers need this tap before any siren can play.</span></div>
+  </div>
+  <!-- 1. HOME SAFE -->
+  <div class="shot">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="statusbar"><span>9:41</span><span data-ic="signal"></span></div>
+      <div class="map" data-map='{"zones":[{"x":85,"y":235,"r":36,"c":"#D97706"}],"user":[185,365]}'></div>
+
+      <div class="topcard">
+        <div class="mascot" style="background:var(--safe-soft)" data-rhino="safe"></div>
+        <div style="flex:1;min-width:0">
+          <div class="greet">Good afternoon</div>
+          <div class="headline">You're safe in Guwahati</div>
+          <div class="bubble">No danger near you right now. I'll warn you if anything changes.</div>
+        </div>
+      </div>
+
+      <div class="rail">
+        <div class="fab" data-ic="locate"></div>
+        <div class="fab" data-ic="layers"></div>
+        <div class="fab" data-ic="rain"></div>
+      </div>
+
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="stats">
+          <div class="stat"><div class="lbl"><span data-ic="pin" data-s="14"></span>Nearest danger</div><div class="val">48 km</div><div class="sub">Flood watch · Nalbari</div></div>
+          <div class="stat"><div class="lbl"><span data-ic="shield" data-s="14"></span>Your risk</div><div class="val" style="color:var(--safe)">Low</div><div class="sub">Updated 2 min ago</div></div>
+        </div>
+        <div class="chips">
+          <div class="chip on">All</div>
+          <div class="chip"><span data-ic="drop" data-s="14"></span>Flood</div>
+          <div class="chip"><span data-ic="mountain" data-s="14"></span>Landslide</div>
+          <div class="chip"><span data-ic="quake" data-s="14"></span>Earthquake</div>
+        </div>
+        <div class="cta"><span class="sos" data-ic="phone" data-s="14"></span>Get help now</div>
+      </div>
+
+      <div class="nav">
+        <a class="on"><span data-ic="map" data-s="18"></span>Map</a>
+        <a><span data-ic="bell" data-s="20"></span>Alerts</a>
+        <a><span data-ic="phone" data-s="20"></span>Help</a>
+        <a><span data-ic="users" data-s="20"></span>NGOs</a>
+      </div>
+    </div></div>
+    <div class="caption">1 · Home — Safe<span>Greeting card + calm rhino. Map fills the screen, sheet shows two stat cards, filter chips and the always-visible help button.</span></div>
+  </div>
+
+  <!-- 2. HOME WATCH -->
+  <div class="shot">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="statusbar"><span>9:41</span><span data-ic="signal"></span></div>
+      <div class="map" data-map='{"zones":[{"x":235,"y":255,"r":78,"c":"#D97706","pulse":1}],"user":[120,385]}'></div>
+
+      <div class="topcard">
+        <div class="mascot" style="background:var(--watch-soft)" data-rhino="watch"></div>
+        <div style="flex:1;min-width:0">
+          <div class="greet">Kamrup Metropolitan · Assam</div>
+          <div class="headline">Stay alert — flood watch nearby</div>
+          <div class="bubble">Water is rising 12 km away. Keep your phone charged.</div>
+        </div>
+      </div>
+
+      <div class="rail">
+        <div class="fab on" data-ic="locate"></div>
+        <div class="fab" data-ic="layers"></div>
+        <div class="fab" data-ic="rain"></div>
+      </div>
+
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="alertcard">
+          <div class="ic" data-ic="drop"></div>
+          <div>
+            <b>Flood watch · North Guwahati</b>
+            <p>River level rising after heavy rain. Avoid low-lying roads near the river bank.</p>
+            <div class="meta"><span class="pill watch"><i></i>WATCH · 12 km NE</span><span class="pill demo">Demo data</span><span class="pill demo">10 min ago</span></div>
+          </div>
+        </div>
+        <div class="cta"><span class="sos" data-ic="phone" data-s="14"></span>Get help now</div>
+      </div>
+
+      <div class="nav">
+        <a class="on"><span data-ic="map" data-s="18"></span>Map</a>
+        <a><span data-ic="bell" data-s="20"></span>Alerts<i class="badge"></i></a>
+        <a><span data-ic="phone" data-s="20"></span>Help</a>
+        <a><span data-ic="users" data-s="20"></span>NGOs</a>
+      </div>
+    </div></div>
+    <div class="caption">2 · Home — Watch<span>Rhino turns amber and worried. The zone pulses on the map; an alert card sits on top of the sheet with honest "Demo data" labels.</span></div>
+  </div>
+
+
+  <!-- 2b. EARLY WARNING -->
+  <div class="shot">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="statusbar"><span>9:41</span><span data-ic="signal"></span></div>
+      <div class="map" data-map='{"zones":[{"x":335,"y":300,"r":88,"c":"#EA580C","pulse":1}],"arrow":[258,318,212,332,"#EA580C"],"user":[178,338],"shelters":[[62,262]],"route":[[178,338],[140,318],[100,292],[64,266]]}'></div>
+      <div class="warnbar">
+        <div class="head">
+          <div class="mascot" data-rhino="scared"></div>
+          <div style="flex:1">
+            <div class="k">EARLY WARNING · FLOOD</div>
+            <div class="eta"><small style="margin-bottom:1px">Flood may reach you in</small>~1 hr 40 min<small>Moving towards you · Estimate</small></div>
+          </div>
+        </div>
+        <div class="foot"><span class="siren"><i></i>Siren on</span><span class="mute"><span data-ic="volumex" data-s="14"></span>Tap to mute</span></div>
+      </div>
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="group-title" style="margin-top:0">Go to a safe place now</div>
+        <div class="go-card">
+          <div class="ic" data-ic="tent"></div>
+          <div style="flex:1"><b>Relief camp · Govt. school</b><span>1.8 km · ~22 min walk · outside the flood</span></div>
+        </div>
+        <div class="two">
+          <div class="b" style="background:var(--navy);color:#fff"><span data-ic="nav" data-s="16"></span>Start route</div>
+          <div class="b" style="background:var(--bg)"><span data-ic="map" data-s="16"></span>Google Maps</div>
+        </div>
+        <div class="todo"><span>🎒 ID & medicines</span><span>⚡ Power off</span><span>👵 Help elders</span></div>
+        <div class="two">
+          <div class="b" style="background:var(--danger);color:#fff"><span data-ic="phone" data-s="16"></span>Call 112</div>
+          <div class="b" style="background:#fff;box-shadow:0 0 0 2px var(--line) inset"><span data-ic="users" data-s="16"></span>Alert family</div>
+        </div>
+      </div>
+      <div class="nav">
+        <a class="on"><span data-ic="map" data-s="18"></span>Map</a>
+        <a><span data-ic="bell" data-s="20"></span>Alerts<i class="badge"></i></a>
+        <a><span data-ic="phone" data-s="20"></span>Help</a>
+        <a><span data-ic="users" data-s="20"></span>NGOs</a>
+      </div>
+    </div></div>
+    <div class="caption">2b · Early warning — disaster approaching<span>Loud siren + vibration. Orange banner with scared rhino and the estimated arrival time. Map shows the zone moving towards the user and a route to the nearest shelter outside the zone.</span></div>
+  </div>
+  <!-- 3. DANGER -->
+  <div class="shot">
+    <div class="phone"><div class="screen" style="background:var(--bg)">
+      <div class="notch"></div>
+      <div class="statusbar light"><span>9:41</span><span data-ic="signal"></span></div>
+      <div class="danger-top">
+        <div class="warn" data-ic="alert" data-s="38"></div>
+        <div class="kicker">FLOOD DANGER</div>
+        <h2>Move to higher ground</h2>
+        <p>Flood water may reach your area<br>in about <b>2 hours</b>.</p>
+        <span class="sim">SIMULATION · estimated arrival</span>
+      </div>
+      <div class="danger-body">
+        <div class="card steps">
+          <div class="card-title">Do this now</div>
+          <div class="s"><div class="n">1</div><b>Go to the nearest shelter</b></div>
+          <div class="s"><div class="n">2</div><b>Carry ID, medicines, phone</b></div>
+          <div class="s"><div class="n">3</div><b>Switch off main electricity</b></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Nearest shelter</div>
+          <div class="shelter">
+            <div class="ic" data-ic="tent"></div>
+            <div style="flex:1"><b>Relief camp · Govt. school</b><span>1.8 km · Open · Demo data</span></div>
+            <div class="go" data-ic="nav" data-s="18"></div>
+          </div>
+        </div>
+        <div style="flex:1"></div>
+        <div class="cta red"><span data-ic="phone" data-s="18"></span>Call 112</div>
+        <div class="btn-ghost"><span data-ic="check" data-s="18"></span>I'm safe — tell my family</div>
+      </div>
+    </div></div>
+    <div class="caption">3 · Danger takeover<span>The mascot steps aside. One clear message, three steps, nearest shelter with directions, one big Call 112 button. Arrival time is labelled "Simulation".</span></div>
+  </div>
+
+  <!-- 4. HELP TAB -->
+  <div class="shot">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="statusbar"><span>9:41</span><span data-ic="signal"></span></div>
+      <div class="map" data-map='{"zones":[],"user":[150,120],"shelters":[[70,125],[230,110],[310,140]]}'></div>
+      <div class="sheet tall">
+        <div class="handle"></div>
+        <div class="sheet-head"><h2>Help near you</h2><div class="x" data-ic="x" data-s="18"></div></div>
+        <div class="sub-head">Tap the green button to call. Works without internet.</div>
+        <div class="chips">
+          <div class="chip on">All</div><div class="chip">Emergency</div><div class="chip">Shelters</div><div class="chip">Hospitals</div>
+        </div>
+        <div class="group-title">Emergency numbers</div>
+        <div class="row"><div class="ic" style="background:var(--danger-soft);color:var(--danger)" data-ic="alert"></div><div class="t"><b>All emergencies</b><span>Police · Fire · Ambulance</span></div><span class="num">112</span><div class="call" data-ic="phone" data-s="18"></div></div>
+        <div class="row"><div class="ic" style="background:var(--primary-soft);color:var(--primary)" data-ic="cross"></div><div class="t"><b>Ambulance</b><span>Free · 24 × 7</span></div><span class="num">108</span><div class="call" data-ic="phone" data-s="18"></div></div>
+        <div class="row"><div class="ic" style="background:var(--watch-soft);color:var(--watch)" data-ic="shield"></div><div class="t"><b>District control room</b><span>Disaster helpline</span></div><span class="num">1077</span><div class="call" data-ic="phone" data-s="18"></div></div>
+        <div class="group-title">Nearest shelters</div>
+        <div class="row"><div class="ic" style="background:var(--safe-soft);color:var(--safe)" data-ic="tent"></div><div class="t"><b>Relief camp · Govt. school</b><span>1.8 km · Space for 300 · Demo</span></div><div class="go" data-ic="nav" data-s="18"></div></div>
+      </div>
+      <div class="nav">
+        <a><span data-ic="map" data-s="20"></span>Map</a>
+        <a><span data-ic="bell" data-s="20"></span>Alerts</a>
+        <a class="on"><span data-ic="phone" data-s="18"></span>Help</a>
+        <a><span data-ic="users" data-s="20"></span>NGOs</a>
+      </div>
+    </div></div>
+    <div class="caption">4 · Help tab<span>Slide-up panel over the map. One-tap call buttons, real national numbers, nearest shelters with directions. Shelters also appear as pins on the map behind.</span></div>
+  </div>
+
+  <!-- 5. NGOS TAB -->
+  <div class="shot">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="statusbar"><span>9:41</span><span data-ic="signal"></span></div>
+      <div class="map" data-map='{"zones":[{"x":255,"y":95,"r":70,"c":"#DC2626"}],"user":[110,120],"ngos":[[235,95],[290,135]]}'></div>
+      <div class="sheet tall">
+        <div class="handle"></div>
+        <div class="sheet-head"><h2>Help groups on site</h2><div class="x" data-ic="x" data-s="18"></div></div>
+        <div class="sub-head">NGOs and volunteers active at the North Guwahati flood</div>
+        <div class="chips"><div class="chip on">All</div><div class="chip">Rescue</div><div class="chip">Food</div><div class="chip">Medical</div></div>
+        <div class="ngo">
+          <div class="top"><div class="logo" style="background:var(--primary)">BR</div><div style="flex:1"><b>Brahmaputra Relief Volunteers</b><span>On site · 2.4 km · Demo data</span></div></div>
+          <div class="tags"><span class="tag">🚤 Rescue boats</span><span class="tag">🍚 Food packets</span><span class="tag">👥 40 volunteers</span></div>
+          <div class="acts"><div style="background:var(--safe);color:#fff"><span data-ic="phone" data-s="16"></span>Call</div><div style="background:#fff"><span data-ic="nav" data-s="16"></span>Directions</div></div>
+        </div>
+        <div class="ngo">
+          <div class="top"><div class="logo" style="background:#0EA5A4">HM</div><div style="flex:1"><b>Hills Medical Aid</b><span>On site · 3.1 km · Demo data</span></div></div>
+          <div class="tags"><span class="tag">🩺 First aid</span><span class="tag">💊 Medicines</span></div>
+        </div>
+      </div>
+      <div class="nav">
+        <a><span data-ic="map" data-s="20"></span>Map</a>
+        <a><span data-ic="bell" data-s="20"></span>Alerts</a>
+        <a><span data-ic="phone" data-s="20"></span>Help</a>
+        <a class="on"><span data-ic="users" data-s="18"></span>NGOs</a>
+      </div>
+    </div></div>
+    <div class="caption">5 · NGOs tab<span>Cards show what each group offers (chips with icons), distance, and two big actions. Their positions show as pins inside the disaster zone.</span></div>
+  </div>
+
+
+  <!-- 6. ALERT FAMILY -->
+  <div class="shot">
+    <div class="phone"><div class="screen">
+      <div class="notch"></div>
+      <div class="statusbar"><span>9:41</span><span data-ic="signal"></span></div>
+      <div class="map" data-map='{"zones":[{"x":300,"y":120,"r":90,"c":"#EA580C"}],"user":[150,120]}'></div>
+      <div class="sheet tall" style="top:132px">
+        <div class="handle"></div>
+        <div class="sheet-head"><h2>Alert your family</h2><div class="x" data-ic="x" data-s="18"></div></div>
+        <div class="sub-head">Sends your location on WhatsApp or SMS.</div>
+        <div class="choice">
+          <div class="safe"><span data-ic="check" data-s="22"></span>I'm safe<span>Tell them not to worry</span></div>
+          <div class="help"><span data-ic="alert" data-s="22"></span>I need help<span>Share my location now</span></div>
+        </div>
+        <div class="group-title">Send to</div>
+        <div class="contact"><div class="avatar" style="background:#F472B6">M</div><div><b>Maa</b><span>+91 98•• ••• 210</span></div><div class="tick" data-ic="check" data-s="14"></div></div>
+        <div class="contact"><div class="avatar" style="background:#60A5FA">P</div><div><b>Papa</b><span>+91 94•• ••• 785</span></div><div class="tick" data-ic="check" data-s="14"></div></div>
+        <div class="group-title">Message preview</div>
+        <div class="msg">🆘 I need help. Flood near me in North Guwahati. My location: <a>maps.google.com/?q=26.19,91.74</a><br><span style="color:#64748B;font-size:11.5px">— sent from Northeast Connect</span></div>
+        <div class="two">
+          <div class="b wa"><span data-ic="send" data-s="16"></span>WhatsApp</div>
+          <div class="b sms"><span data-ic="msg" data-s="16"></span>SMS</div>
+        </div>
+        <div class="note" style="margin-top:10px"><span data-ic="shield" data-s="13"></span>Numbers are saved only on this phone</div>
+      </div>
+    </div></div>
+    <div class="caption">6 · Alert family<span>Two big choices, up to 3 saved contacts (stored on the phone, no login), message preview with location link, then WhatsApp or SMS.</span></div>
+  </div>
+</div>
+
+<div class="section-title">Mascot · changes with status</div>
+<div class="mascots">
+  <div class="mcard"><div class="m" style="background:var(--safe-soft)" data-rhino="safe"></div><div><b>Safe · calm</b><span>"No danger near you right now."</span></div></div>
+  <div class="mcard"><div class="m" style="background:var(--watch-soft)" data-rhino="watch"></div><div><b>Watch · worried</b><span>"Heavy rain nearby. Stay alert."</span></div></div>
+  <div class="mcard"><div class="m" style="background:var(--warn-soft)" data-rhino="scared"></div><div><b>Early warning · scared</b><span>"Water is coming. Let's go to the shelter now."</span></div></div>
+  <div class="mcard"><div class="m" style="background:var(--danger-soft)" data-rhino="danger"></div><div><b>Danger · steps aside</b><span>Only used small (e.g. in the alert list). The red takeover screen leads.</span></div></div>
+</div>
+
+<div class="section-title">Admin panel · desktop (/admin)</div>
+<div class="desk">
+  <aside class="side">
+    <div class="brand"><div class="logo" data-rhino="safe"></div><div><b>Northeast Connect</b><span>ADMIN</span></div></div>
+    <a><span data-ic="grid" data-s="18"></span>Overview</a>
+    <a class="on"><span data-ic="alert" data-s="18"></span>Disasters<span class="count">3</span></a>
+    <a><span data-ic="phone" data-s="18"></span>Contacts<span class="count">6</span></a>
+    <a><span data-ic="tent" data-s="18"></span>Shelters<span class="count">9</span></a>
+    <a><span data-ic="users" data-s="18"></span>NGOs<span class="count">4</span></a>
+    <a><span data-ic="shield" data-s="18"></span>Admins<span class="count">1</span></a>
+    <div class="me"><b>Signed in as admin</b>Changes go live on the public map instantly.</div>
+  </aside>
+  <main class="main">
+    <div class="main-head">
+      <div><h2>Disasters</h2><p>Add a disaster by tapping the map. People nearby see it immediately.</p></div>
+      <div style="display:flex;gap:10px"><div class="btn light"><span data-ic="zap" data-s="16"></span>Simulate</div><div class="btn primary"><span data-ic="plus" data-s="16"></span>Add disaster</div></div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="ic" style="background:var(--danger-soft);color:var(--danger)" data-ic="alert"></div><div><b>3</b><span>Active disasters</span></div></div>
+      <div class="kpi"><div class="ic" style="background:var(--safe-soft);color:var(--safe)" data-ic="tent"></div><div><b>9</b><span>Shelters open</span></div></div>
+      <div class="kpi"><div class="ic" style="background:var(--primary-soft);color:var(--primary)" data-ic="users"></div><div><b>4</b><span>NGOs on site</span></div></div>
+      <div class="kpi"><div class="ic" style="background:var(--watch-soft);color:var(--watch)" data-ic="phone"></div><div><b>6</b><span>Contacts</span></div></div>
+    </div>
+    <div class="split">
+      <div class="panel">
+        <h3>Place on map <span class="pill demo">Kamrup Metropolitan</span></h3>
+        <div class="mapbox">
+          <div class="map" data-map='{"zones":[{"x":215,"y":300,"r":62,"c":"#D97706","pulse":1}],"pin":[215,300],"vb":"-40 110 455 425"}'></div>
+          <div class="hint"><span data-ic="pin" data-s="15"></span>Tap the map to move the centre</div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>New disaster</h3>
+        <div class="field"><label>Type</label><div class="seg"><div class="on"><span data-ic="drop" data-s="14"></span>Flood</div><div><span data-ic="mountain" data-s="14"></span>Landslide</div><div><span data-ic="quake" data-s="14"></span>Earthquake</div><div>Other</div></div></div>
+        <div class="field"><label>Severity</label><div class="seg"><div class="on w">● Watch</div><div>● Danger</div></div></div>
+        <div class="field"><label>Affected radius</label><div class="slider"><div class="track"><i></i><b></b></div><span>8 km</span></div></div>
+        <div class="field"><label>District</label><div class="input"><span data-ic="pin" data-s="15"></span>Kamrup Metropolitan, Assam<span class="auto">AUTO</span></div></div>
+        <div class="field"><label>What should people know?</label><div class="input textarea">River level rising near North Guwahati…</div></div>
+        <div class="toggles"><div class="tg"><div class="sw on"></div>Show on public map</div><div class="tg"><div class="sw on"></div>Demo data</div></div>
+        <div class="form-acts"><div class="btn primary" style="flex:1;justify-content:center">Save disaster</div><div class="btn light">Cancel</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Active disasters <span class="pill demo">Demo data</span></h3>
+      <table>
+        <tr><th>Disaster</th><th>District</th><th>Severity</th><th>Radius</th><th>Public</th><th>Updated</th><th></th></tr>
+        <tr><td><span class="tico" style="background:var(--danger-soft);color:var(--danger)" data-ic="drop" data-s="16"></span><b>Flood · North Guwahati</b></td><td>Kamrup Metropolitan</td><td><span class="pill danger"><i></i>DANGER</span></td><td>8 km</td><td><div class="sw on"></div></td><td>10 min ago</td><td><div class="acts"><div data-ic="edit" data-s="15"></div><div data-ic="trash" data-s="15"></div></div></td></tr>
+        <tr><td><span class="tico" style="background:var(--watch-soft);color:var(--watch)" data-ic="mountain" data-s="16"></span><b>Landslide · Shillong road</b></td><td>East Khasi Hills</td><td><span class="pill watch"><i></i>WATCH</span></td><td>3 km</td><td><div class="sw on"></div></td><td>1 hr ago</td><td><div class="acts"><div data-ic="edit" data-s="15"></div><div data-ic="trash" data-s="15"></div></div></td></tr>
+        <tr><td><span class="tico" style="background:var(--watch-soft);color:var(--watch)" data-ic="drop" data-s="16"></span><b>Flood watch · Nalbari</b></td><td>Nalbari</td><td><span class="pill watch"><i></i>WATCH</span></td><td>12 km</td><td><div class="sw"></div></td><td>3 hrs ago</td><td><div class="acts"><div data-ic="edit" data-s="15"></div><div data-ic="trash" data-s="15"></div></div></td></tr>
+      </table>
+    </div>
+  </main>
+</div>
+
+<div class="section-title">Colour tokens</div>
+<div class="tokens">
+  <div class="tok"><i style="background:#F4F6FB"></i><div><b>Background</b><span>#F4F6FB</span></div></div>
+  <div class="tok"><i style="background:#0F172A"></i><div><b>Ink</b><span>#0F172A</span></div></div>
+  <div class="tok"><i style="background:#2F5BEA"></i><div><b>Primary blue</b><span>#2F5BEA</span></div></div>
+  <div class="tok"><i style="background:#0F1B3D"></i><div><b>Navy (main buttons)</b><span>#0F1B3D</span></div></div>
+  <div class="tok"><i style="background:#16A34A"></i><div><b>Safe</b><span>#16A34A / #E6F6EC</span></div></div>
+  <div class="tok"><i style="background:#D97706"></i><div><b>Watch</b><span>#D97706 / #FFF3DC</span></div></div>
+  <div class="tok"><i style="background:#EA580C"></i><div><b>Early warning</b><span>#EA580C / #FFEDD5</span></div></div>
+  <div class="tok"><i style="background:#DC2626"></i><div><b>Danger</b><span>#DC2626 / #FDECEC</span></div></div>
+</div>
+
+<script>
+/* ---------- icons (stroke, lucide-style) ---------- */
+const IC={
+  phone:['M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z'],
+  bell:['M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9','M10.3 21a1.9 1.9 0 0 0 3.4 0'],
+  shield:['M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'],
+  users:['M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2','c:9,7,4','M22 21v-2a4 4 0 0 0-3-3.9','M16 3.1a4 4 0 0 1 0 7.8'],
+  locate:['c:12,12,3','c:12,12,7.5','M12 2v2.5','M12 19.5V22','M2 12h2.5','M19.5 12H22'],
+  layers:['M12 2 2 7l10 5 10-5-10-5z','M2 17l10 5 10-5','M2 12l10 5 10-5'],
+  rain:['M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2','M16 14v6','M8 14v6','M12 16v6'],
+  alert:['M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z','M12 9v4','M12 17h.01'],
+  nav:['M3 11l19-9-9 19-2-8-8-2z'],
+  pin:['M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z','c:12,10,3'],
+  check:['M20 6 9 17l-5-5'],
+  plus:['M12 5v14','M5 12h14'],
+  map:['M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z','M8 2v16','M16 6v16'],
+  drop:['M12 2.7l5.7 5.7a8 8 0 1 1-11.3 0z'],
+  mountain:['M8 3l4 8 5-5 5 15H2L8 3z'],
+  quake:['M22 12h-4l-3 9L9 3l-3 9H2'],
+  edit:['M12 20h9','M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z'],
+  trash:['M3 6h18','M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'],
+  grid:['M3 3h7v7H3z','M14 3h7v7h-7z','M14 14h7v7h-7z','M3 14h7v7H3z'],
+  tent:['M3.5 21 14 3','M20.5 21 10 3','M15.5 21 12 15l-3.5 6','M2 21h20'],
+  cross:['M12 6v12','M6 12h12'],
+  x:['M18 6 6 18','M6 6l12 12'],
+  zap:['M13 2 3 14h9l-1 8 10-12h-9l1-8z'],
+  volume:['M11 5 6 9H2v6h4l5 4V5z','M15.5 8.5a5 5 0 0 1 0 7','M19 5a10 10 0 0 1 0 14'],
+  volumex:['M11 5 6 9H2v6h4l5 4V5z','M22 9l-6 6','M16 9l6 6'],
+  vibrate:['M8 3h8a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z','M3 8v8','M21 8v8'],
+  send:['M22 2 11 13','M22 2 15 22l-4-9-9-4 20-7z'],
+  msg:['M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'],
+  signal:[]
+};
+function ic(name,s=20){
+  if(name==='signal') return '<svg width="62" height="14" viewBox="0 0 62 14" fill="currentColor"><rect x="0" y="9" width="3" height="5" rx="1"/><rect x="5" y="6" width="3" height="8" rx="1"/><rect x="10" y="3" width="3" height="11" rx="1"/><rect x="15" y="0" width="3" height="14" rx="1"/><path d="M27 4.5a9 9 0 0 1 12 0l-1.4 1.5a7 7 0 0 0-9.2 0zM29.6 7.4a5 5 0 0 1 6.8 0L35 8.8a3 3 0 0 0-4 0zM33 12l-1.7-1.7a2.4 2.4 0 0 1 3.4 0z"/><rect x="42" y="2" width="18" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="44" y="4" width="13" height="6" rx="1.5"/></svg>';
+  const parts=(IC[name]||[]).map(p=>{
+    if(p.startsWith('c:')){const [cx,cy,r]=p.slice(2).split(',');return `<circle cx="${cx}" cy="${cy}" r="${r}"/>`}
+    return `<path d="${p}"/>`}).join('');
+  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">${parts}</svg>`;
+}
+document.querySelectorAll('[data-ic]').forEach(el=>{el.insertAdjacentHTML('afterbegin',ic(el.dataset.ic,+el.dataset.s||22))});
+
+/* ---------- rhino mascot (original, flat) ---------- */
+function rhino(mood){
+  const body={safe:'#6CC4A1',watch:'#F6B54A',scared:'#FB923C',danger:'#F47272'}[mood];
+  const dark={safe:'#3E9C78',watch:'#C9861C',scared:'#C2410C',danger:'#C94B4B'}[mood];
+  const snout={safe:'#9BDCC1',watch:'#FAD08A',scared:'#FDC08F',danger:'#F9A3A3'}[mood];
+  const mouth = mood==='safe' ? 'M52 93 Q60 100 68 93' : 'M53 97 Q60 91 67 97';
+  const scared = mood==='scared';
+  const brows = mood==='safe' ? '' : `<path d="M33 37 L45 41" stroke="${dark}" stroke-width="3.2" stroke-linecap="round"/><path d="M87 37 L75 41" stroke="${dark}" stroke-width="3.2" stroke-linecap="round"/>`;
+  const sweat = (mood==='watch'||scared) ? `<path d="M96 30 q4 7 0 10 q-4 -3 0 -10z" fill="#7CC4F2"/>` : '';
+  return `<svg viewBox="0 0 120 112">
+    <ellipse cx="33" cy="24" rx="9" ry="13" fill="${body}" transform="rotate(-18 33 24)"/>
+    <ellipse cx="87" cy="24" rx="9" ry="13" fill="${body}" transform="rotate(18 87 24)"/>
+    <ellipse cx="33" cy="26" rx="4" ry="7" fill="${dark}" opacity=".35" transform="rotate(-18 33 26)"/>
+    <ellipse cx="87" cy="26" rx="4" ry="7" fill="${dark}" opacity=".35" transform="rotate(18 87 26)"/>
+    <ellipse cx="60" cy="62" rx="46" ry="42" fill="${body}"/>
+    <ellipse cx="60" cy="86" rx="29" ry="19" fill="${snout}"/>
+    <path d="M52 72 C54 60 57 52 63 44 C64 54 66 63 68 72 Z" fill="#FFF6E8" stroke="${dark}" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M48 64 C51 58 54 55 58 52" fill="none" stroke="${dark}" stroke-width="0" />
+    <circle cx="42" cy="48" r="${scared?9.5:8}" fill="#fff"/><circle cx="78" cy="48" r="${scared?9.5:8}" fill="#fff"/>
+    <circle cx="43" cy="49" r="${scared?3.4:4.6}" fill="#1E293B"/><circle cx="77" cy="49" r="${scared?3.4:4.6}" fill="#1E293B"/>
+    <circle cx="44.6" cy="47.2" r="1.6" fill="#fff"/><circle cx="78.6" cy="47.2" r="1.6" fill="#fff"/>
+    ${brows}
+    <circle cx="28" cy="66" r="6" fill="#FF8FA3" opacity=".45"/><circle cx="92" cy="66" r="6" fill="#FF8FA3" opacity=".45"/>
+    <ellipse cx="52" cy="84" rx="3" ry="2.2" fill="${dark}"/><ellipse cx="68" cy="84" rx="3" ry="2.2" fill="${dark}"/>
+    ${scared?`<ellipse cx="60" cy="96" rx="5" ry="6" fill="${dark}"/><path d="M20 34 q4 7 0 10 q-4 -3 0 -10z" fill="#7CC4F2"/>`:`<path d="${mouth}" fill="none" stroke="${dark}" stroke-width="3" stroke-linecap="round"/>`}
+    ${sweat}
+  </svg>`;
+}
+document.querySelectorAll('[data-rhino]').forEach(el=>el.innerHTML=rhino(el.dataset.rhino));
+
+/* ---------- stylised light map (placeholder for the real Leaflet map) ---------- */
+function mapSVG(o){
+  const vb=o.vb||'0 0 375 780';
+  const zones=(o.zones||[]).map(z=>`
+    <circle cx="${z.x}" cy="${z.y}" r="${z.r}" fill="${z.c}" fill-opacity=".16" stroke="${z.c}" stroke-width="2.5" stroke-dasharray="7 6"/>
+    <circle cx="${z.x}" cy="${z.y}" r="${z.r*.55}" fill="${z.c}" fill-opacity=".22" ${z.pulse?'class="pulse"':''}/>
+    <circle cx="${z.x}" cy="${z.y}" r="7" fill="${z.c}" stroke="#fff" stroke-width="3"/>`).join('');
+  const user=o.user?`<circle cx="${o.user[0]}" cy="${o.user[1]}" r="26" fill="#2F5BEA" fill-opacity=".15"/><circle cx="${o.user[0]}" cy="${o.user[1]}" r="9" fill="#2F5BEA" stroke="#fff" stroke-width="4"/>`:'';
+  const pinS=(x,y,c,glyph)=>`<g transform="translate(${x-15},${y-38})"><path d="M15 0C6.7 0 0 6.7 0 15c0 11 15 23 15 23s15-12 15-23C30 6.7 23.3 0 15 0z" fill="${c}" stroke="#fff" stroke-width="2.5"/><text x="15" y="20" text-anchor="middle" font-size="13" font-weight="800" fill="#fff" font-family="Plus Jakarta Sans,sans-serif">${glyph}</text></g>`;
+  const shelters=(o.shelters||[]).map(p=>pinS(p[0],p[1],'#16A34A','⌂')).join('');
+  const ngos=(o.ngos||[]).map(p=>pinS(p[0],p[1],'#2F5BEA','♥')).join('');
+  const route=o.route?`<polyline points="${o.route.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><polyline points="${o.route.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#0F1B3D" stroke-width="5" stroke-dasharray="1 10" stroke-linecap="round" stroke-linejoin="round"/>`:'';
+  const arrow=o.arrow?`<g stroke="${o.arrow[4]}" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M${o.arrow[0]} ${o.arrow[1]} L${o.arrow[2]} ${o.arrow[3]}" stroke-dasharray="6 6"/></g><circle cx="${o.arrow[2]}" cy="${o.arrow[3]}" r="5" fill="${o.arrow[4]}"/>`:'';
+  const pin=o.pin?pinS(o.pin[0],o.pin[1]-2,'#0F1B3D','+'):'';
+    return `<svg viewBox="${vb}" preserveAspectRatio="xMidYMid slice">
+    <rect x="-200" y="-200" width="800" height="1200" fill="#EEF2EA"/>
+    <g transform="translate(0,-90)">
+      <path d="M0 120 L120 90 L210 140 L375 100 L375 0 L0 0Z" fill="#E1EBD9"/>
+      <path d="M0 560 L90 520 L170 600 L260 560 L375 610 L375 780 L0 780Z" fill="#E4EDDC"/>
+      <ellipse cx="300" cy="680" rx="60" ry="34" fill="#DCE8D2"/>
+      <path d="M-20 300 C60 270 110 340 190 320 S320 250 400 280" fill="none" stroke="#C9DEF3" stroke-width="48" stroke-linecap="round"/>
+      <path d="M-20 300 C60 270 110 340 190 320 S320 250 400 280" fill="none" stroke="#B5D2EE" stroke-width="2" stroke-dasharray="2 10"/>
+      <text x="64" y="300" font-size="12" font-style="italic" font-weight="700" fill="#6B93BD" font-family="Plus Jakarta Sans,sans-serif" transform="rotate(-6 64 300)">Brahmaputra</text>
+      <g fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round">
+        <path d="M0 470 C100 455 200 500 375 450"/><path d="M190 780 L200 470 L230 340"/><path d="M40 780 L110 470"/><path d="M375 520 L250 640 L120 780"/><path d="M200 470 L330 400 L375 390"/>
+      </g>
+      <g fill="none" stroke="#DDE3EC" stroke-width="2"><path d="M0 470 C100 455 200 500 375 450"/></g>
+      <path d="M20 360 C120 380 140 420 260 395 S360 420 375 430" fill="none" stroke="#A7B3C7" stroke-width="1.6" stroke-dasharray="6 6"/>
+      <g font-family="Plus Jakarta Sans,sans-serif" fill="#475569" font-weight="700">
+        <text x="150" y="438" font-size="14" fill="#1E293B" font-weight="800">Guwahati</text>
+        <text x="235" y="520" font-size="11">Dispur</text>
+        <text x="240" y="232" font-size="11">North Guwahati</text>
+        <text x="40" y="640" font-size="11">Jalukbari</text>
+        <text x="260" y="720" font-size="11">Beltola</text>
+        <text x="40" y="200" font-size="11">Amingaon</text>
+      </g>
+    </g>
+    ${zones}${arrow}${route}${shelters}${ngos}${user}${pin}
+  </svg>`;
+}
+document.querySelectorAll('[data-map]').forEach(el=>el.innerHTML=mapSVG(JSON.parse(el.dataset.map)));
+</script>
+</body>
+</html>

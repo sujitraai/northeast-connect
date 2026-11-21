@@ -16,8 +16,8 @@ export default defineConfig({
         name: 'Northeast Connect',
         short_name: 'NE Connect',
         description: 'Live early-warning map for North East India',
-        theme_color: '#0b0f14',
-        background_color: '#0b0f14',
+        theme_color: '#F4F6FB',
+        background_color: '#F4F6FB',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
@@ -25,7 +25,8 @@ export default defineConfig({
       },
       workbox: {
         // App shell + boundary data are precached so the map frame works offline.
-        globPatterns: ['**/*.{js,css,html,svg,geojson}'],
+        // Font: only the Latin subset is precached (other subsets load on demand).
+        globPatterns: ['**/*.{js,css,html,svg,geojson}', '**/*-latin-wght-normal-*.woff2'],
         // The admin panel is online-only; don't make every phone download it.
         globIgnores: ['**/AdminApp-*.js'],
         runtimeCaching: [

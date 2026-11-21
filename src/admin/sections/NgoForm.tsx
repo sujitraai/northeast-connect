@@ -5,7 +5,7 @@ import { deleteRow, inNeBox, orNull, PHONE_RE, saveRow, useRows } from '../lib/d
 import { useSaver, type FormProps } from '../lib/useSaver';
 import { HonestyFields } from '../ui/commonFields';
 import { SelectField, TextField, Toggle } from '../ui/fields';
-import { FormShell } from '../ui/layout';
+import { FormShell, Panel } from '../ui/layout';
 import PointPicker, { type PickedPoint } from '../ui/PointPicker';
 
 export default function NgoForm({ row, onDone, onCancel }: FormProps<Ngo>) {
@@ -65,60 +65,64 @@ export default function NgoForm({ row, onDone, onCancel }: FormProps<Ngo>) {
     })),
   ];
 
+  const small = 'min-h-9 rounded-xl bg-bg px-3 text-xs font-bold text-ink-2 hover:bg-chip';
+  const map = (
+    <Panel
+      title={
+        <>
+          Where are they working? <span className="font-semibold text-muted">Optional</span>
+        </>
+      }
+      side={
+        <div className="flex gap-2">
+          {linked && (
+            <button
+              type="button"
+              onClick={() => {
+                setPoint({ lat: linked.lat, lng: linked.lng });
+                setPickerKey((k) => k + 1);
+              }}
+              className={small}
+            >
+              Use the disaster’s location
+            </button>
+          )}
+          {point && (
+            <button type="button" onClick={() => setPoint(null)} className={small}>
+              Remove location
+            </button>
+          )}
+        </div>
+      }
+    >
+      <PointPicker key={pickerKey} geo={geo} value={point} onChange={(p) => setPoint(p)} />
+    </Panel>
+  );
+
   return (
     <FormShell
-      title={row ? 'Edit NGO or help group' : 'Add an NGO or help group'}
+      title={row ? 'Edit help group' : 'New NGO or help group'}
+      help="Link the group to the disaster they are helping at."
       onBack={onCancel}
       onSubmit={submit}
       onDelete={row ? remove : undefined}
       saving={saving}
       error={error}
-      saveLabel={row ? 'Save changes' : 'Add group'}
+      saveLabel={row ? 'Save changes' : 'Save group'}
+      map={map}
     >
-      <TextField label="Name" value={name} onChange={setName} maxLength={120} />
+      <TextField label="Name" placeholder="e.g. Brahmaputra Relief Volunteers" value={name} onChange={setName} maxLength={120} />
       <TextField label="What they help with" placeholder="e.g. rescue boats, food, medicine" value={focus} onChange={setFocus} maxLength={200} />
       <TextField label="Phone number" hint="Optional" type="tel" inputMode="tel" value={phone} onChange={setPhone} maxLength={20} />
       <SelectField label="Working at disaster" value={disasterId} onChange={setDisasterId} options={disasterOptions} />
-
-      <div>
-        <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-semibold text-slate-200">
-            Where are they working? <span className="font-normal text-slate-500">Optional</span>
-          </p>
-          <div className="flex gap-2">
-            {linked && (
-              <button
-                type="button"
-                onClick={() => {
-                  setPoint({ lat: linked.lat, lng: linked.lng });
-                  setPickerKey((k) => k + 1);
-                }}
-                className="min-h-10 rounded-lg border border-white/15 px-3 text-sm font-semibold text-slate-200 hover:bg-white/5"
-              >
-                Use the disaster’s location
-              </button>
-            )}
-            {point && (
-              <button
-                type="button"
-                onClick={() => setPoint(null)}
-                className="min-h-10 rounded-lg border border-white/15 px-3 text-sm font-semibold text-slate-300 hover:bg-white/5"
-              >
-                Remove location
-              </button>
-            )}
-          </div>
-        </div>
-        <PointPicker key={pickerKey} geo={geo} value={point} onChange={(p) => setPoint(p)} />
-      </div>
-
-      <Toggle
-        label="Active now"
-        hint={active ? 'Shown to people as helping at this disaster.' : 'Not shown to the public.'}
-        checked={active}
-        onChange={setActive}
-      />
-      <HonestyFields isDemo={isDemo} source={source} onDemo={setIsDemo} onSource={setSource} />
+      <HonestyFields isDemo={isDemo} source={source} onDemo={setIsDemo} onSource={setSource}>
+        <Toggle
+          label="Active now"
+          hint={active ? 'Shown to people as helping.' : 'Not shown to people.'}
+          checked={active}
+          onChange={setActive}
+        />
+      </HonestyFields>
     </FormShell>
   );
 }

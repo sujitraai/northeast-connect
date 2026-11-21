@@ -1,33 +1,36 @@
 import { CONTACT_CATEGORIES, labelOf, place } from '../lib/labels';
-import { DemoBadge } from '../ui/bits';
-import CrudSection from '../ui/CrudSection';
-import { PhoneIcon } from '../ui/icons';
-import { Row } from '../ui/layout';
+import { TitleCell } from '../ui/cells';
+import CrudSection, { type SectionProps } from '../ui/CrudSection';
 import ContactForm from './ContactForm';
 
-export default function Contacts() {
+export default function Contacts({ startNew }: SectionProps) {
   return (
     <CrudSection
+      startNew={startNew}
       table="contacts"
       title="Emergency contacts"
-      intro="Numbers people can tap to call. Contacts without a district show everywhere."
+      help="Numbers people can tap to call. Contacts without a district show everywhere."
+      listTitle="All contacts"
       addLabel="Add contact"
+      noun="contact"
       empty="No contacts yet. Add the district control room first."
       Form={ContactForm}
-      renderRow={(c, edit) => (
-        <Row key={c.id} onClick={edit}>
-          <div className="flex items-center gap-2 text-sm text-slate-400">
-            {labelOf(CONTACT_CATEGORIES, c.category) !== c.name && labelOf(CONTACT_CATEGORIES, c.category)}
-            {c.is_demo && <DemoBadge />}
-          </div>
-          <p className="mt-0.5 truncate text-lg font-bold text-white">{c.name}</p>
-          <p className="flex items-center gap-1.5 text-base font-semibold text-sky-200">
-            <PhoneIcon />
-            {c.phone}
-          </p>
-          <p className="text-sm text-slate-500">{place(c.district, c.state)}</p>
-        </Row>
-      )}
+      columns={() => [
+        {
+          header: 'Name',
+          cell: (c) => <TitleCell icon="phone" tone="primary" title={c.name} demo={c.is_demo} />,
+        },
+        {
+          header: 'Number',
+          cell: (c) => (
+            <a href={`tel:${c.phone.replace(/\s/g, '')}`} className="font-extrabold text-ink hover:text-primary">
+              {c.phone}
+            </a>
+          ),
+        },
+        { header: 'Type', cell: (c) => labelOf(CONTACT_CATEGORIES, c.category) },
+        { header: 'Area', cell: (c) => place(c.district, c.state) },
+      ]}
     />
   );
 }

@@ -26,6 +26,14 @@ export function friendlyError(err: PostgrestError | Error | null | undefined): s
   return msg || 'Something went wrong. Try again.';
 }
 
+/** Fired after any admin change, so counts and lists elsewhere can refresh. */
+const CHANGED = 'nec:data-changed';
+export const notifyChange = () => window.dispatchEvent(new Event(CHANGED));
+export function onDataChange(fn: () => void) {
+  window.addEventListener(CHANGED, fn);
+  return () => window.removeEventListener(CHANGED, fn);
+}
+
 function client() {
   if (!supabase) throw new Error('Supabase is not connected. Add your keys to .env.local.');
   return supabase;
@@ -78,6 +86,7 @@ export async function saveRow<T extends EditableTable>(
     if (error) return friendlyError(error);
     // Security rules silently skip rows a non-admin may not change.
     if (id && count === 0) return 'Nothing was saved. The item may have been deleted, or your account is not an admin any more.';
+    notifyChange();
     return null;
   } catch (e) {
     return friendlyError(e as Error);
@@ -89,10 +98,69 @@ export async function deleteRow(table: EditableTable, id: string): Promise<strin
     const { error, count } = await client().from(table).delete({ count: 'exact' }).eq('id', id);
     if (error) return friendlyError(error);
     if (count === 0) return 'Nothing was deleted. Your account may not be an admin any more.';
+    notifyChange();
     return null;
   } catch (e) {
     return friendlyError(e as Error);
   }
+}
+
+/** Shows or hides a disaster / NGO on the public map (the "Public" switch). */
+export async function setActive(table: 'disasters' | 'ngos', id: string, active: boolean): Promise<string | null> {
+  try {
+    const { error, count } = await client().from(table).update({ active }, { count: 'exact' }).eq('id', id);
+    if (error) return friendlyError(error);
+    if (count === 0) return 'Nothing was saved. Your account may not be an admin any more.';
+    notifyChange();
+    return null;
+  } catch (e) {
+    return friendlyError(e as Error);
+  }
+}
+
+export interface Counts {
+  disasters: number;
+  activeDisasters: number;
+  contacts: number;
+  shelters: number;
+  ngos: number;
+  activeNgos: number;
+  admins: number;
+}
+
+/** Row counts for the sidebar and overview. Null until loaded. */
+export function useCounts(): Counts | null {
+  const [counts, setCounts] = useState<Counts | null>(null);
+
+  const load = useCallback(async () => {
+    if (!supabase) return;
+    const db = supabase;
+    const count = async (table: EditableTable) =>
+      (await db.from(table).select('id', { count: 'exact', head: true })).count ?? 0;
+    const countActive = async (table: 'disasters' | 'ngos') =>
+      (await db.from(table).select('id', { count: 'exact', head: true }).eq('active', true)).count ?? 0;
+    try {
+      const [disasters, activeDisasters, contacts, shelters, ngos, activeNgos, admins] = await Promise.all([
+        count('disasters'),
+        countActive('disasters'),
+        count('contacts'),
+        count('shelters'),
+        count('ngos'),
+        countActive('ngos'),
+        db.rpc('list_admins').then((r) => (r.data ?? []).filter((a) => !a.pending).length),
+      ]);
+      setCounts({ disasters, activeDisasters, contacts, shelters, ngos, activeNgos, admins });
+    } catch {
+      /* counts are a nice-to-have; leave the last known values */
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+    return onDataChange(() => void load());
+  }, [load]);
+
+  return counts;
 }
 
 /** Empty text → null, so optional columns stay empty in the database. */

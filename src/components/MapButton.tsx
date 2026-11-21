@@ -8,19 +8,18 @@ interface Props {
   disabled?: boolean;
 }
 
-/** Large (56px) round map control — easy to hit on a phone. */
+/** 46px rounded-square map control (right rail). Active = primary blue. */
 export default function MapButton({ label, onClick, children, active, disabled }: Props) {
   return (
     <button
       type="button"
       aria-label={label}
+      aria-pressed={active}
       title={label}
       onClick={onClick}
       disabled={disabled}
-      className={`flex h-14 w-14 items-center justify-center rounded-full border shadow-lg backdrop-blur transition active:scale-95 disabled:opacity-70 ${
-        active
-          ? 'border-sky-400 bg-sky-500/90 text-white'
-          : 'border-white/15 bg-slate-900/85 text-slate-100 hover:bg-slate-800/90'
+      className={`pointer-events-auto grid size-[46px] place-items-center rounded-btn shadow-soft transition active:scale-95 disabled:opacity-80 ${
+        active ? 'bg-primary text-white' : 'bg-white text-ink-2 hover:text-ink'
       }`}
     >
       {children}
