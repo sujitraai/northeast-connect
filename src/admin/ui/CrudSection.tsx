@@ -22,6 +22,8 @@ interface Props<T extends EditableTable> {
   Form: ComponentType<FormProps<RowOf<T>>>;
   /** Open the "add" form straight away (from an "Add" button elsewhere). */
   startNew?: boolean;
+  /** Extra row buttons before Edit / Delete (e.g. Simulate). */
+  rowActions?: (row: RowOf<T>, reload: () => void, report: (msg: string) => void) => ReactNode;
 }
 
 /** Props every list page accepts from the shell. */
@@ -43,6 +45,7 @@ export default function CrudSection<T extends EditableTable>({
   faded,
   Form,
   startNew,
+  rowActions,
 }: Props<T>) {
   const { rows, loading, error, reload } = useRows(table);
   const [editing, setEditing] = useState<RowOf<T> | 'new' | null>(startNew ? 'new' : null);
@@ -79,10 +82,9 @@ export default function CrudSection<T extends EditableTable>({
   };
 
   const list = sort ? [...rows].sort(sort) : rows;
-  const cols = columns(
-    () => void reload(),
-    (text) => setFlash({ tone: 'error', text }),
-  );
+  const doReload = () => void reload();
+  const report = (text: string) => setFlash({ tone: 'error', text });
+  const cols = columns(doReload, report);
 
   return (
     <section>
@@ -115,6 +117,7 @@ export default function CrudSection<T extends EditableTable>({
             faded={faded}
             actions={(r) => (
               <>
+                {rowActions?.(r, doReload, report)}
                 <IconButton icon="edit" label={`Edit ${noun}`} onClick={() => setEditing(r)} />
                 <DeleteIconButton what={noun} onConfirm={() => void remove(r)} />
               </>

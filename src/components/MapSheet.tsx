@@ -211,19 +211,21 @@ function RiskCard({ z, onClose }: { z: RiskZone; onClose: () => void }) {
   );
 }
 
-/** "How safe am I?": two stat cards when Safe; the nearest disaster's card when Watch. */
+/**
+ * "How safe am I?" for Safe and Watch: two stat cards when Safe; the nearest
+ * disaster's card when Watch. (Early warning / Danger use their own sheet.)
+ */
 function SafetyPanel({ safety, here, live }: { safety: Safety; here: Here; live: LiveMap }) {
   const n = safety.nearest;
   const of = here.kind === 'gps' ? '' : ` of ${here.district}`;
 
-  if (n && safety.level !== 'safe') {
+  const lead = safety.lead;
+  if (lead && safety.level !== 'safe') {
     const where =
-      safety.level === 'inside'
-        ? 'you are inside'
-        : n.edgeKm === 0
-          ? `reaches your ${here.kind === 'gps' ? 'area' : 'district'}`
-          : `${formatKm(n.edgeKm)} ${n.direction}${of}`;
-    return <DisasterCard d={n.disaster} where={where} level={safety.level === 'inside' ? 'danger' : 'watch'} />;
+      lead.edgeKm === 0
+        ? `reaches your ${here.kind === 'gps' ? 'area' : 'district'}`
+        : `${formatKm(lead.edgeKm)} ${lead.direction}${of}`;
+    return <DisasterCard d={lead.disaster} where={where} level={safety.level === 'watch' ? 'watch' : 'danger'} />;
   }
 
   const liveText =

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Disaster, RiskZone } from '../lib/database.types';
+import type { Disaster, RiskZone, Shelter } from '../lib/database.types';
 import { supabase } from '../lib/supabase';
 
 /** off = Supabase not set up; live = realtime connected; offline = showing the last load. */
@@ -8,6 +8,8 @@ export type LiveStatus = 'off' | 'connecting' | 'live' | 'offline';
 export interface LiveMap {
   disasters: Disaster[];
   riskZones: RiskZone[];
+  /** Safe places people are sent to in an Early warning / Danger. */
+  shelters: Shelter[];
   status: LiveStatus;
   loaded: boolean;
   error: string | null;
@@ -16,7 +18,7 @@ export interface LiveMap {
 }
 
 /**
- * Active disasters + risk zones for the public map. Loads once, then
+ * Active disasters, risk zones and shelters for the public map. Loads once, then
  * reloads whenever an admin saves (Supabase realtime), when the phone comes
  * back online, and when the app comes back to the front.
  */
@@ -24,6 +26,7 @@ export function useLiveMap(): LiveMap {
   const [state, setState] = useState<LiveMap>({
     disasters: [],
     riskZones: [],
+    shelters: [],
     status: supabase ? 'connecting' : 'off',
     loaded: false,
     error: null,
@@ -37,12 +40,13 @@ export function useLiveMap(): LiveMap {
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     const load = async () => {
-      const [d, r] = await Promise.all([
+      const [d, r, sh] = await Promise.all([
         db.from('disasters').select('*').eq('active', true).order('created_at', { ascending: false }),
         db.from('risk_zones').select('*'),
+        db.from('shelters').select('*'),
       ]);
       if (cancelled) return;
-      const failed = d.error ?? r.error;
+      const failed = d.error ?? r.error ?? sh.error;
       setState((s) =>
         failed
           ? { ...s, loaded: true, error: 'Could not load disasters. Check your internet connection.' }
@@ -50,6 +54,7 @@ export function useLiveMap(): LiveMap {
               ...s,
               disasters: d.data ?? [],
               riskZones: r.data ?? [],
+              shelters: sh.data ?? [],
               loaded: true,
               error: null,
               updatedAt: Date.now(),
@@ -68,6 +73,7 @@ export function useLiveMap(): LiveMap {
       .channel(`public-map-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'disasters' }, reloadSoon)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'risk_zones' }, reloadSoon)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'shelters' }, reloadSoon)
       .subscribe((status) => {
         if (cancelled) return;
         if (status === 'SUBSCRIBED') {

@@ -6,6 +6,7 @@ import { PublicSwitch, TitleCell } from '../ui/cells';
 import CrudSection, { type SectionProps } from '../ui/CrudSection';
 import type { Column } from '../ui/DataTable';
 import DisasterForm from './DisasterForm';
+import { RadiusCell, SimulateButton } from '../ui/simulate';
 
 const SEV_ORDER = ['low', 'moderate', 'high', 'severe'];
 
@@ -30,7 +31,8 @@ export function disasterColumns(): Column<Disaster>[] {
         return <StatusPill tone={s.tone}>{s.label.toUpperCase()}</StatusPill>;
       },
     },
-    { header: 'Radius', cell: (d) => `${Number(d.radius_km)} km` },
+    { header: 'Radius', cell: (d) => <RadiusCell d={d} /> },
+    { header: 'Spread', cell: (d) => `${Number(d.spread_kmh ?? 3)} km/h`, mobile: 'hide' },
     { header: 'Updated', cell: (d) => timeAgo(d.updated_at), mobile: 'hide' },
   ];
 }
@@ -41,7 +43,7 @@ export default function Disasters({ startNew }: SectionProps) {
       startNew={startNew}
       table="disasters"
       title="Disasters"
-      help="Public disasters show on the public map within seconds of saving. Switch off Public to hide one."
+      help="Public disasters show on the public map within seconds. Simulate grows an area at its spread speed, 60× faster (1 second = 1 minute)."
       listTitle="All disasters"
       addLabel="Add disaster"
       noun="disaster"
@@ -49,9 +51,10 @@ export default function Disasters({ startNew }: SectionProps) {
       sort={sortDisasters}
       faded={(d) => !d.active}
       Form={DisasterForm}
+      rowActions={(d, reload, report) => <SimulateButton d={d} onDone={reload} onError={report} />}
       columns={(reload, report) => {
         const cols = disasterColumns();
-        cols.splice(4, 0, {
+        cols.splice(5, 0, {
           header: 'Public',
           cell: (d) => <PublicSwitch table="disasters" id={d.id} active={d.active} onSaved={reload} onError={report} />,
         });

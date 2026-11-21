@@ -93,7 +93,7 @@ function hereCard(here: Here, live: LiveMap, safety: Safety | null): TopCardCont
     return { ...NEUTRAL, greet: place, headline: `You're in ${area}`, bubble };
   }
 
-  const n = safety.nearest;
+  const n = safety.lead ?? safety.nearest;
   if (safety.level === 'safe' || !n) {
     return {
       mood: 'safe',
@@ -105,12 +105,14 @@ function hereCard(here: Here, live: LiveMap, safety: Safety | null): TopCardCont
   }
 
   const word = WORD[n.disaster.type];
-  if (safety.level === 'inside') {
+  // Early warning / Danger normally show the orange banner or red screen
+  // instead of this card; this is the fallback text.
+  if (safety.level === 'early' || safety.level === 'danger') {
     return {
-      mood: 'danger',
-      tone: 'danger',
+      mood: safety.level === 'early' ? 'scared' : 'danger',
+      tone: safety.level === 'early' ? 'warn' : 'danger',
       greet: place,
-      headline: `You're inside a ${word} area`,
+      headline: n.inside ? `You're inside a ${word} area` : `${word[0].toUpperCase()}${word.slice(1)} coming towards you`,
       bubble: `${n.disaster.title}. Move to a safe place if you can. Tap “Get help now” for emergency numbers.`,
       demo: n.disaster.is_demo,
     };

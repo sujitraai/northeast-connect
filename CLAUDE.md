@@ -57,7 +57,7 @@ Public side can only READ. Only a logged-in admin can add/edit/delete.
    admin saves
 5. [DONE] "How safe am I?" panel: Safe / Watch / Danger, distance and direction
    to nearest active disaster
-6. Alerts + Simulate Disaster mode: zone expands over time, estimated
+6. [DONE] Alerts + Simulate Disaster mode: zone expands over time, estimated
    arrival labelled "Simulation", on-screen + browser notification.
    Admin can trigger it.
 7. Live rain radar overlay (RainViewer) with timeline play

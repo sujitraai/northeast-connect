@@ -19,6 +19,7 @@ import type { Position } from '../hooks/useGeolocation';
 import type { DistrictProps } from '../lib/region';
 import type { Disaster, RiskZone } from '../lib/database.types';
 import ZoneLayers, { type MapSelection } from './map/ZoneLayers';
+import RouteLayer, { type MapRoute } from './map/RouteLayer';
 
 const BOUNDARY_ATTR =
   'Boundaries: <a href="https://github.com/datameet/maps">DataMeet</a> (districts: Census 2011)';
@@ -43,6 +44,8 @@ interface Props {
   riskZones: RiskZone[];
   selected: MapSelection;
   onSelectItem: (s: MapSelection) => void;
+  /** Recommended shelter (+ dotted line) during an Early warning / Danger. */
+  route: MapRoute | null;
 }
 
 export default function MapView({
@@ -56,6 +59,7 @@ export default function MapView({
   riskZones,
   selected,
   onSelectItem,
+  route,
 }: Props) {
   const tiles = BASE_MAPS[baseMap];
   const look = MAP_STYLES[baseMap];
@@ -117,6 +121,8 @@ export default function MapView({
       <ZoneLayers disasters={disasters} riskZones={riskZones} selected={selected} onSelect={onSelectItem} />
 
       <StateLabels />
+
+      {route && <RouteLayer route={route} />}
 
       {userPosition && <UserMarker position={userPosition} />}
     </MapContainer>

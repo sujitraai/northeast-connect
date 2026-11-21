@@ -4,6 +4,7 @@ import type { Disaster } from '../../lib/database.types';
 import { useGeo } from '../geo';
 import { deleteRow, inNeBox, orNull, saveRow } from '../lib/data';
 import { DISASTER_TYPES, SEVERITIES, severityOf } from '../lib/labels';
+import { DEFAULT_SPREAD_KMH } from '../../lib/simulation';
 import { useSaver, type FormProps } from '../lib/useSaver';
 import { HonestyFields, PlaceFields } from '../ui/commonFields';
 import { RangeField, Segmented, TextArea, TextField, Toggle } from '../ui/fields';
@@ -21,6 +22,7 @@ export default function DisasterForm({ row, onDone, onCancel }: FormProps<Disast
   const [severity, setSeverity] = useState(row?.severity ?? 'moderate');
   const [point, setPoint] = useState<PickedPoint | null>(row ? { lat: row.lat, lng: row.lng } : null);
   const [radius, setRadius] = useState(String(row?.radius_km ?? 10));
+  const [speed, setSpeed] = useState(String(row?.spread_kmh ?? DEFAULT_SPREAD_KMH));
   const [state, setState] = useState(row?.state ?? '');
   const [district, setDistrict] = useState(row?.district ?? '');
   const [autoPlace, setAutoPlace] = useState(false);
@@ -38,6 +40,10 @@ export default function DisasterForm({ row, onDone, onCancel }: FormProps<Disast
     if (!(radiusNum > 0 && radiusNum <= MAX_RADIUS)) {
       return setError(`The affected area must be between 1 and ${MAX_RADIUS} km.`);
     }
+    const speedNum = Number(speed);
+    if (speed.trim() === '' || !(speedNum >= 0 && speedNum <= 200)) {
+      return setError('Spread speed must be between 0 and 200 km/h. Use 0 if it is not spreading.');
+    }
     if (!isDemo && !source.trim()) return setError('Real information needs a source. Add where it came from.');
 
     void run(
@@ -49,6 +55,7 @@ export default function DisasterForm({ row, onDone, onCancel }: FormProps<Disast
           lat: point.lat,
           lng: point.lng,
           radius_km: Math.round(radiusNum * 100) / 100,
+          spread_kmh: Math.round(speedNum * 100) / 100,
           state: orNull(state),
           district: orNull(district),
           description: orNull(description),
@@ -126,6 +133,15 @@ export default function DisasterForm({ row, onDone, onCancel }: FormProps<Disast
       />
 
       <RangeField label="Affected radius" value={radius} onChange={setRadius} min={1} max={100} unit="km" />
+
+      <TextField
+        label="Spread speed (km/h)"
+        hint="How fast it may spread. 0 = not spreading."
+        type="number"
+        inputMode="decimal"
+        value={speed}
+        onChange={setSpeed}
+      />
 
       <PlaceFields
         state={state}

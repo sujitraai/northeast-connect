@@ -20,6 +20,9 @@ export function friendlyError(err: PostgrestError | Error | null | undefined): s
   if (code === '23514') return 'Some values are not allowed. Check the phone number, location and lengths.';
   if (code === '23502') return 'A required field is empty.';
   if (code === '22023' || code === 'P0001') return msg;
+  if (code === 'PGRST204' || code === '42703' || /spread_kmh|sim_started_at|start_simulation|stop_simulation/.test(msg)) {
+    return 'The simulation tools are not installed. Run supabase/05_simulation.sql in the Supabase SQL Editor.';
+  }
   if (code === 'PGRST202' || code === '42883') {
     return 'The admin tools are not installed. Run supabase/04_admin_tools.sql in the Supabase SQL Editor.';
   }
@@ -98,6 +101,20 @@ export async function deleteRow(table: EditableTable, id: string): Promise<strin
     const { error, count } = await client().from(table).delete({ count: 'exact' }).eq('id', id);
     if (error) return friendlyError(error);
     if (count === 0) return 'Nothing was deleted. Your account may not be an admin any more.';
+    notifyChange();
+    return null;
+  } catch (e) {
+    return friendlyError(e as Error);
+  }
+}
+
+/** Starts or stops "Simulate" on a disaster (supabase/05_simulation.sql). */
+export async function setSimulation(id: string, run: boolean): Promise<string | null> {
+  try {
+    const { error } = run
+      ? await client().rpc('start_simulation', { p_id: id })
+      : await client().rpc('stop_simulation', { p_id: id });
+    if (error) return friendlyError(error);
     notifyChange();
     return null;
   } catch (e) {

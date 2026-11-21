@@ -34,6 +34,10 @@ export type Disaster = Common & {
   lng: number;
   radius_km: number;
   active: boolean;
+  /** km/h; 0 = not spreading. Added by supabase/05_simulation.sql. */
+  spread_kmh: number;
+  /** Set while "Simulate" is running (server time). */
+  sim_started_at: string | null;
 };
 
 export type RiskZone = Common & {
@@ -84,7 +88,8 @@ export type AdminEntry = {
   pending: boolean;
 };
 
-type Server = 'id' | 'created_at' | 'updated_at';
+// sim_started_at is only changed through start_simulation / stop_simulation.
+type Server = 'id' | 'created_at' | 'updated_at' | 'sim_started_at';
 type Insert<T> = Omit<T, Server | 'is_demo' | 'source'> &
   Partial<Pick<Common, 'is_demo' | 'source'>>;
 
@@ -118,6 +123,9 @@ export type Database = {
       list_admins: { Args: Record<string, never>; Returns: AdminEntry[] };
       add_admin: { Args: { p_email: string }; Returns: 'added' | 'already' | 'invited' };
       remove_admin: { Args: { p_email: string }; Returns: 'removed' | 'not_found' };
+      // supabase/05_simulation.sql
+      start_simulation: { Args: { p_id: string }; Returns: 'started' | 'already' };
+      stop_simulation: { Args: { p_id: string }; Returns: 'stopped' | 'not_running' };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

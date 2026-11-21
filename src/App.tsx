@@ -8,6 +8,11 @@ import { Handle } from './components/sheet';
 import MapSheet, { type TypeFilter } from './components/MapSheet';
 import type { MapSelection } from './components/map/ZoneLayers';
 import TurnOnAlerts from './components/TurnOnAlerts';
+import WarningBanner from './components/alerts/WarningBanner';
+import EarlySheet from './components/alerts/EarlySheet';
+import DangerTakeover from './components/alerts/DangerTakeover';
+import FamilyPanel from './components/tabs/FamilyPanel';
+import type { MapRoute } from './components/map/RouteLayer';
 import AlertsTab from './components/tabs/AlertsTab';
 import DistrictPicker from './components/tabs/DistrictPicker';
 import HelpTab from './components/tabs/HelpTab';
@@ -20,8 +25,13 @@ import { useChosenDistrict } from './hooks/useChosenDistrict';
 import { useGeoData } from './hooks/useGeoData';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useLiveMap } from './hooks/useLiveMap';
+import { useAlarm } from './hooks/useAlarm';
+import { useNow } from './hooks/useNow';
 import { locatePlace, type DistrictProps, type PlaceMatch } from './lib/region';
-import { assess, centreOf, type Here } from './lib/safety';
+import { assess, atLeast, centreOf, type Here } from './lib/safety';
+import { GUIDANCE } from './lib/guidance';
+import { safeShelter } from './lib/shelters';
+import { formatEta, isSimulating, withCurrentRadius } from './lib/simulation';
 import { topCardFor } from './lib/topCard';
 
 const BASEMAP_KEY = 'nec.basemap';
@@ -35,8 +45,8 @@ function loadBaseMap(): BaseMapId {
   return 'streets';
 }
 
-/** What the sheet shows: a nav tab, or the district list. */
-type Panel = TabId | 'district';
+/** What the sheet shows: a nav tab, the district list, or Alert family. */
+type Panel = TabId | 'district' | 'family';
 
 export default function App() {
   const [map, setMap] = useState<LeafletMap | null>(null);
@@ -48,6 +58,9 @@ export default function App() {
   const [selection, setSelection] = useState<MapSelection>(null);
   const [filter, setFilter] = useState<TypeFilter>('all');
   const [setupOpen, setSetupOpen] = useState(false);
+  const [routeOn, setRouteOn] = useState(false);
+  // The Danger screen was closed for this disaster ("Show map").
+  const [dangerClosedFor, setDangerClosedFor] = useState<string | null>(null);
 
   const geo = useGeoData();
   const live = useLiveMap();
@@ -105,9 +118,39 @@ export default function App() {
     here = { kind: 'district', at: centreOf(chosenShape), district: chosen.district, state: chosen.state, shape: chosenShape };
   }
 
+  // A running simulation grows its area: re-check every second, using the radius "now".
+  const now = useNow(live.disasters.some(isSimulating));
+  const nowDisasters = useMemo(() => live.disasters.map((d) => withCurrentRadius(d, now)), [live.disasters, now]);
+
   // How safe am I? Uses every active disaster (not the map filter). Recomputed on every live update.
   const canCheck = live.status !== 'off' && live.loaded && !(live.error && !live.updatedAt);
-  const safety = here && canCheck ? assess(here, live.disasters) : null;
+  const safety = here && canCheck ? assess(here, nowDisasters) : null;
+  const level = safety?.level ?? 'safe';
+  const lead = safety?.lead ?? null;
+  const loud = atLeast(level, 'early') && lead !== null;
+
+  // Early warning / Danger: nearest shelter outside the area, and the loud alert.
+  const shelter = loud && here && lead ? safeShelter(here.at, live.shelters, lead.disaster) : null;
+  const g = lead ? GUIDANCE[lead.disaster.type] : null;
+  const eta = lead?.etaHours != null ? formatEta(lead.etaHours) : null;
+  const siren = useAlarm({
+    level,
+    enabled: alerts.choice === 'on',
+    title: level === 'danger' ? `${g?.name ?? 'Disaster'} danger: ${g?.instruction ?? 'move to safety'}` : `Early warning: ${g?.name ?? 'disaster'}`,
+    body: lead
+      ? lead.inside
+        ? `You are inside the ${lead.disaster.title} area. ${g?.instruction}.`
+        : `${lead.disaster.title} may reach you in ${eta ?? 'soon'} (${isSimulating(lead.disaster) ? 'Simulation' : 'Estimate'}).`
+      : '',
+  });
+  const dangerId = level === 'danger' && lead ? lead.disaster.id : null;
+  const showTakeover = dangerId !== null && dangerClosedFor !== dangerId;
+  useEffect(() => {
+    if (!loud) setRouteOn(false);
+    if (level !== 'danger') setDangerClosedFor(null);
+  }, [loud, level]);
+  const route: MapRoute | null =
+    loud && shelter ? { from: here?.kind === 'gps' ? here.at : null, to: shelter.shelter, line: routeOn } : null;
 
   const pickDistrict = (district: string, state: string) => {
     choose({ district, state });
@@ -129,7 +172,7 @@ export default function App() {
   const onMapReady = useCallback((m: LeafletMap) => setMap(m), []);
 
   // Filter chips apply to both disasters and risk areas.
-  const disasters = live.disasters.filter((d) => filter === 'all' || d.type === filter);
+  const disasters = nowDisasters.filter((d) => filter === 'all' || d.type === filter);
   const riskZones = live.riskZones.filter((z) => filter === 'all' || z.type === filter);
   // Looked up from live data, so a deleted or hidden item closes its card.
   const selectedDisaster = selection?.kind === 'disaster' ? (disasters.find((d) => d.id === selection.id) ?? null) : null;
@@ -180,7 +223,7 @@ export default function App() {
     ? `Your browser has blocked ${blocked} for this site. Tap the lock or ⓘ next to the web address, allow ${blocked}, then tap “Turn on alerts” again.`
     : null;
 
-  const tab: TabId = panel === 'district' ? 'map' : panel;
+  const tab: TabId = panel === 'district' || panel === 'family' ? 'map' : panel;
   const onMap = panel === 'map';
   const backToMap = () => setPanel('map');
 
@@ -199,6 +242,7 @@ export default function App() {
           riskZones={riskZones}
           selected={selection}
           onSelectItem={onSelectItem}
+          route={route}
         />
       </div>
 
@@ -209,17 +253,28 @@ export default function App() {
         }`}
       >
         <div className="flex flex-col gap-2 lg:max-w-[400px]">
-          {alertsOff && (
-            <button
-              type="button"
-              onClick={() => setSetupOpen(true)}
-              className="pointer-events-auto inline-flex h-9 items-center gap-1.5 self-center rounded-full bg-white/95 px-3.5 text-[13px] font-bold text-ink-2 shadow-soft lg:self-start"
-            >
-              <Icon name="bell" size={15} />
-              Alerts are off · <span className="text-primary">Turn on</span>
-            </button>
+          {loud && lead && (level === 'early' || !showTakeover) ? (
+            <WarningBanner
+              level={level === 'danger' ? 'danger' : 'early'}
+              lead={lead}
+              siren={siren}
+              onOpen={level === 'danger' ? () => setDangerClosedFor(null) : undefined}
+            />
+          ) : (
+            <>
+              {alertsOff && (
+                <button
+                  type="button"
+                  onClick={() => setSetupOpen(true)}
+                  className="pointer-events-auto inline-flex h-9 items-center gap-1.5 self-center rounded-full bg-white/95 px-3.5 text-[13px] font-bold text-ink-2 shadow-soft lg:self-start"
+                >
+                  <Icon name="bell" size={15} />
+                  Alerts are off · <span className="text-primary">Turn on</span>
+                </button>
+              )}
+              <TopCard {...top.card} action={action} onClose={top.closable ? () => setTappedDistrict(null) : undefined} />
+            </>
           )}
-          <TopCard {...top.card} action={action} onClose={top.closable ? () => setTappedDistrict(null) : undefined} />
         </div>
         <div className="flex flex-col items-end gap-2.5">
           <MapButton label="Show my location" onClick={locate} active={inRegion} disabled={locating}>
@@ -245,7 +300,17 @@ export default function App() {
       >
         <Handle />
         <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
-          {panel === 'map' && (
+          {panel === 'map' && loud && lead && (
+            <EarlySheet
+              lead={lead}
+              pick={shelter}
+              from={here?.kind === 'gps' ? here.at : null}
+              routeOn={routeOn}
+              onRoute={() => setRouteOn((v) => !v)}
+              onFamily={() => setPanel('family')}
+            />
+          )}
+          {panel === 'map' && !loud && (
             <MapSheet
               live={live}
               shownDisasters={disasters.length}
@@ -263,6 +328,7 @@ export default function App() {
           {panel === 'district' && (
             <DistrictPicker districts={geo.districts} current={chosen} onPick={pickDistrict} onClose={backToMap} />
           )}
+          {panel === 'family' && <FamilyPanel onClose={backToMap} />}
           {panel === 'alerts' && <AlertsTab onClose={backToMap} />}
           {panel === 'help' && <HelpTab onClose={backToMap} />}
           {panel === 'ngos' && <NgosTab onClose={backToMap} />}
@@ -272,6 +338,20 @@ export default function App() {
       <div className="pointer-events-none absolute inset-x-3.5 bottom-[max(14px,env(safe-area-inset-bottom))] z-[1002] lg:left-auto lg:w-[372px]">
         <BottomNav current={tab} onChange={setPanel} />
       </div>
+
+      {showTakeover && lead && (
+        <DangerTakeover
+          lead={lead}
+          pick={shelter}
+          from={here?.kind === 'gps' ? here.at : null}
+          siren={siren}
+          onFamily={() => {
+            setDangerClosedFor(lead.disaster.id);
+            setPanel('family');
+          }}
+          onClose={() => setDangerClosedFor(lead.disaster.id)}
+        />
+      )}
 
       {showSetup && (
         <TurnOnAlerts
