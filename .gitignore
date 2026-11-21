@@ -1,0 +1,7 @@
+node_modules
+dist
+dev-dist
+.geo-cache
+*.local
+.vercel
+.DS_Store

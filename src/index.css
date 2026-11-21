@@ -1,0 +1,53 @@
+@import 'tailwindcss';
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: #0b0f14;
+  color: #e2e8f0;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+/* Dark backdrop while tiles load. */
+.leaflet-container {
+  background: #0b0f14;
+  font-family: inherit;
+}
+
+.leaflet-control-attribution {
+  background: rgba(11, 15, 20, 0.7) !important;
+  color: #94a3b8;
+  font-size: 10px;
+  max-width: 70vw;
+}
+.leaflet-control-attribution a {
+  color: #cbd5e1;
+}
+
+/* State name labels (divIcon). */
+.state-label {
+  pointer-events: none;
+}
+.state-label span {
+  display: block;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e0f2fe;
+  text-shadow:
+    0 0 3px #000,
+    0 0 6px #000,
+    0 1px 2px #000;
+}
