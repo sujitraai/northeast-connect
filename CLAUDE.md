@@ -48,7 +48,7 @@ Public side can only READ. Only a logged-in admin can add/edit/delete.
    boundaries, outside dimmed, satellite/dark toggle, locate me
 2. [DONE] Supabase setup: tables above, security rules (public read, admin
    write), seed with demo data
-3. Admin panel at /admin: login; add/edit/remove disasters (click a point
+3. [DONE] Admin panel at /admin: login; add/edit/remove disasters (click a point
    on the map + set radius), contacts, shelters, NGOs; simple forms,
    mobile-friendly
       - "Manage admins" page: add/remove admins by email

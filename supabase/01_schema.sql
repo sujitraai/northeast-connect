@@ -186,8 +186,9 @@ end
 $$;
 
 -- admins: a logged-in user may only see whether THEY are an admin.
--- Nobody can add admins through the API; do it in the SQL Editor
--- (see supabase/03_make_admin.sql).
+-- Nobody can write this table directly. The first admin is added in the SQL
+-- Editor (supabase/03_make_admin.sql); after that, admins use the "Manage
+-- admins" page, which calls the checked functions in 04_admin_tools.sql.
 alter table public.admins enable row level security;
 drop policy if exists "Users can see their own admin row" on public.admins;
 create policy "Users can see their own admin row" on public.admins

@@ -26,6 +26,8 @@ export default defineConfig({
       workbox: {
         // App shell + boundary data are precached so the map frame works offline.
         globPatterns: ['**/*.{js,css,html,svg,geojson}'],
+        // The admin panel is online-only; don't make every phone download it.
+        globIgnores: ['**/AdminApp-*.js'],
         runtimeCaching: [
           {
             // Base map tiles: serve from cache first, keep a bounded number.

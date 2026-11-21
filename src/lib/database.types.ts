@@ -75,6 +75,15 @@ export type Ngo = Common & {
   active: boolean;
 };
 
+/** One row of list_admins(): an admin, or a pending invite (user_id null). */
+export type AdminEntry = {
+  user_id: string | null;
+  email: string;
+  added_at: string;
+  is_you: boolean;
+  pending: boolean;
+};
+
 type Server = 'id' | 'created_at' | 'updated_at';
 type Insert<T> = Omit<T, Server | 'is_demo' | 'source'> &
   Partial<Pick<Common, 'is_demo' | 'source'>>;
@@ -105,6 +114,10 @@ export type Database = {
     Views: Record<string, never>;
     Functions: {
       is_admin: { Args: Record<string, never>; Returns: boolean };
+      // supabase/04_admin_tools.sql
+      list_admins: { Args: Record<string, never>; Returns: AdminEntry[] };
+      add_admin: { Args: { p_email: string }; Returns: 'added' | 'already' | 'invited' };
+      remove_admin: { Args: { p_email: string }; Returns: 'removed' | 'not_found' };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
