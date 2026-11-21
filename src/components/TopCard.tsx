@@ -19,6 +19,8 @@ export interface TopCardContent {
   greet: string;
   headline: string;
   bubble: string;
+  /** The danger shown comes from demo data: say so. */
+  demo?: boolean;
 }
 
 interface Props extends TopCardContent {
@@ -27,7 +29,7 @@ interface Props extends TopCardContent {
 }
 
 /** Floating card at the top of the map: mascot + where you are + plain advice. */
-export default function TopCard({ mood, tone, greet, headline, bubble, action, onClose }: Props) {
+export default function TopCard({ mood, tone, greet, headline, bubble, demo, action, onClose }: Props) {
   return (
     <section
       aria-live="polite"
@@ -40,6 +42,9 @@ export default function TopCard({ mood, tone, greet, headline, bubble, action, o
         <p className="truncate text-[12.5px] font-semibold text-muted">{greet}</p>
         <h1 className="mt-px text-[17px] leading-tight font-extrabold tracking-[-0.01em] text-ink">{headline}</h1>
         <p className="mt-1 text-[13px] leading-snug text-ink-2">{bubble}</p>
+        {demo && (
+          <span className="mt-1.5 inline-flex rounded-full bg-chip px-2.5 py-0.5 text-[11.5px] font-bold text-muted">Demo data</span>
+        )}
         {action && <div className="mt-2.5">{action}</div>}
       </div>
       {onClose && (

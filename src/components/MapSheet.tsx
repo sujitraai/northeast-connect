@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Disaster, RiskZone } from '../lib/database.types';
 import { severityOf, timeAgo } from '../lib/labels';
+import { formatKm, type Here, type Safety } from '../lib/safety';
 import type { LiveMap } from '../hooks/useLiveMap';
 import { DISASTER_ICON, Icon, type IconName } from './icons';
 import { RISK_COLOR } from './map/ZoneLayers';
@@ -25,6 +26,9 @@ interface Props {
   selectedRisk: RiskZone | null;
   onCloseSelected: () => void;
   onHelp: () => void;
+  /** Set once we know where the person is and the data has loaded. */
+  safety: Safety | null;
+  here: Here | null;
 }
 
 /** Map tab sheet: kept short so the map stays visible. */
@@ -40,6 +44,8 @@ export default function MapSheet(p: Props) {
         <DisasterCard d={p.selectedDisaster} onClose={p.onCloseSelected} />
       ) : p.selectedRisk ? (
         <RiskCard z={p.selectedRisk} onClose={p.onCloseSelected} />
+      ) : p.safety && p.here ? (
+        <SafetyPanel safety={p.safety} here={p.here} live={p.live} />
       ) : (
         <LiveLine live={p.live} disasters={p.shownDisasters} riskZones={p.shownRiskZones} />
       )}
@@ -137,9 +143,21 @@ const TONE_CARD = {
 } as const;
 
 /** Alert card for a tapped disaster zone (reference "alertcard"). */
-function DisasterCard({ d, onClose }: { d: Disaster; onClose: () => void }) {
+function DisasterCard({
+  d,
+  onClose,
+  where,
+  level,
+}: {
+  d: Disaster;
+  onClose?: () => void;
+  /** Distance + direction from the person, e.g. "12 km north-east". */
+  where?: string;
+  /** The person's level (Watch / Danger) colours the card; severity becomes a pill. */
+  level?: 'watch' | 'danger';
+}) {
   const sev = severityOf(d.severity);
-  const t = TONE_CARD[sev.tone];
+  const t = TONE_CARD[level ?? sev.tone];
   return (
     <article className={`slide-up mb-3 flex gap-3 rounded-inner p-3 ${t.card}`}>
       <div className={`grid size-10 shrink-0 place-items-center rounded-[14px] bg-white ${t.icon}`}>
@@ -148,7 +166,7 @@ function DisasterCard({ d, onClose }: { d: Disaster; onClose: () => void }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-start gap-2">
           <h3 className="min-w-0 flex-1 text-[15px] leading-snug font-extrabold text-ink">{d.title}</h3>
-          <CloseButton onClose={onClose} />
+          {onClose && <CloseButton onClose={onClose} />}
         </div>
         <p className="mt-0.5 text-[13px] leading-snug text-ink-2">
           {d.description || `Affected area: about ${Number(d.radius_km)} km around the centre.`}
@@ -156,8 +174,9 @@ function DisasterCard({ d, onClose }: { d: Disaster; onClose: () => void }) {
         <div className="mt-2 flex flex-wrap gap-1.5">
           <Pill className={t.pill}>
             <i className="size-[7px] rounded-full bg-current" />
-            {t.word} · {sev.label}
+            {where ? `${t.word} · ${where}` : `${t.word} · ${sev.label}`}
           </Pill>
+          {where && <Pill className="bg-white/70 text-ink-2">{sev.label} severity</Pill>}
           <Pill className="bg-white/70 text-ink-2">{Number(d.radius_km)} km area</Pill>
           {d.is_demo ? <Pill className="bg-white/70 text-muted">Demo data</Pill> : d.source && <Pill className="bg-white/70 text-muted">Source: {d.source}</Pill>}
           <Pill className="bg-white/70 text-muted">{timeAgo(d.updated_at)}</Pill>
@@ -189,5 +208,56 @@ function RiskCard({ z, onClose }: { z: RiskZone; onClose: () => void }) {
         </div>
       </div>
     </article>
+  );
+}
+
+/** "How safe am I?": two stat cards when Safe; the nearest disaster's card when Watch. */
+function SafetyPanel({ safety, here, live }: { safety: Safety; here: Here; live: LiveMap }) {
+  const n = safety.nearest;
+  const of = here.kind === 'gps' ? '' : ` of ${here.district}`;
+
+  if (n && safety.level !== 'safe') {
+    const where =
+      safety.level === 'inside'
+        ? 'you are inside'
+        : n.edgeKm === 0
+          ? `reaches your ${here.kind === 'gps' ? 'area' : 'district'}`
+          : `${formatKm(n.edgeKm)} ${n.direction}${of}`;
+    return <DisasterCard d={n.disaster} where={where} level={safety.level === 'inside' ? 'danger' : 'watch'} />;
+  }
+
+  const liveText =
+    live.status === 'live'
+      ? 'Live, updates by itself'
+      : live.updatedAt
+        ? `Not live, checked ${new Date(live.updatedAt).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}`
+        : 'Not live';
+
+  return (
+    <div className="mb-3 grid grid-cols-2 gap-2.5">
+      <Stat icon="pin" label="Nearest disaster">
+        <b className="block text-[22px] font-extrabold tracking-[-0.02em] text-ink">{n ? formatKm(n.edgeKm) : 'None'}</b>
+        <span className="block text-[12px] leading-snug font-semibold text-muted">
+          {n ? `${n.direction[0].toUpperCase()}${n.direction.slice(1)}${of} · ${n.disaster.title}` : 'No active disasters'}
+          {n?.disaster.is_demo && ' · Demo data'}
+        </span>
+      </Stat>
+      <Stat icon="shield" label="Your risk">
+        <b className="block text-[22px] font-extrabold tracking-[-0.02em] text-safe">Safe</b>
+        <span className="block text-[12px] leading-snug font-semibold text-muted">{liveText}</span>
+      </Stat>
+    </div>
+  );
+}
+
+function Stat({ icon, label, children }: { icon: IconName; label: string; children: ReactNode }) {
+  return (
+    <div className="min-w-0 rounded-inner bg-bg px-3.5 py-3">
+      <p className="flex items-center gap-1.5 text-xs font-bold text-muted">
+        <Icon name={icon} size={14} />
+        {label}
+      </p>
+      <div className="mt-1.5">{children}</div>
+    </div>
   );
 }

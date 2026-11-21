@@ -55,7 +55,7 @@ Public side can only READ. Only a logged-in admin can add/edit/delete.
       - "Manage admins" page: add/remove admins by email
 4. [DONE] Risk zones + active disasters on the public map, updating live when
    admin saves
-5. "How safe am I?" panel: Safe / Watch / Danger, distance and direction
+5. [DONE] "How safe am I?" panel: Safe / Watch / Danger, distance and direction
    to nearest active disaster
 6. Alerts + Simulate Disaster mode: zone expands over time, estimated
    arrival labelled "Simulation", on-screen + browser notification.

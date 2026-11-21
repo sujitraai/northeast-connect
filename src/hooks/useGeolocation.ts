@@ -12,6 +12,8 @@ export function useGeolocation() {
   const [status, setStatus] = useState<LocateStatus>('idle');
   const [position, setPosition] = useState<Position | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // True once the person (or their browser settings) refused location.
+  const [denied, setDenied] = useState(false);
 
   const locate = useCallback(() => {
     if (!('geolocation' in navigator)) {
@@ -29,9 +31,11 @@ export function useGeolocation() {
           accuracy: pos.coords.accuracy,
         });
         setStatus('found');
+        setDenied(false);
       },
       (err) => {
         setStatus('error');
+        setDenied(err.code === err.PERMISSION_DENIED);
         setError(
           err.code === err.PERMISSION_DENIED
             ? 'Location is blocked. Allow location access in your browser settings.'
@@ -44,5 +48,5 @@ export function useGeolocation() {
     );
   }, []);
 
-  return { status, position, error, locate };
+  return { status, position, error, denied, locate };
 }
