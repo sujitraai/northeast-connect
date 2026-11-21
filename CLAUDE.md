@@ -82,6 +82,14 @@ Follow design-reference/DESIGN.md and index.html exactly for all UI. Use the fro
   link; up to 3 contacts saved on the phone only.
 - ETA: admin sets spread speed (km/h); ETA = distance to zone edge ÷ speed;
   Simulate grows the zone at that speed.
+  
+ ## Location-based help
+National numbers (112, 108, 101, 100) always shown first, for everyone
+District contacts: shown only for the user's current district (from GPS or demo location)
+Shelters, hospitals and NGOs: sorted by distance from the user; NGOs only within 30 km or linked to a nearby disaster; show distance on every item
+Empty state: "No help groups near you yet — call 112"
+Contacts table gets a "national" flag; admin picks district by map tap or dropdown
+Demo data: contacts, shelters and NGOs in at least Kamrup Metropolitan, East Khasi Hills (Shillong) and Dibrugarh, so switching demo location visibly changes the lists
 
 ## Demo mode (live presentation)
 - Flow: admin adds disaster on laptop → phone updates live (<2 s) → admin
